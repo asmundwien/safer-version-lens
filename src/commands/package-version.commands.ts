@@ -6,7 +6,6 @@ import { PackageManagerFactory } from "../services/package-managers/package-mana
 import { IPackageManagerService } from "../services/package-managers/package-manager.interface";
 import { AuditService } from "../services/audit-service";
 import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
-import { VulnerabilitySeverity } from "../types";
 
 /**
  * Commands related to package version management
@@ -95,10 +94,6 @@ export class PackageVersionCommands {
           targetVersion
         );
       });
-
-      vscode.window.showInformationMessage(
-        `Updated ${packageName} to ${targetVersion}`
-      );
     } catch (error) {
       vscode.window.showErrorMessage(
         `Failed to update package: ${error instanceof Error ? error.message : String(error)}`
@@ -147,10 +142,6 @@ export class PackageVersionCommands {
         );
       });
 
-      vscode.window.showInformationMessage(
-        `Updated packageManager to ${targetVersion}`
-      );
-
       // Refresh the package manager service
       const workspaceFolders = vscode.workspace.workspaceFolders;
       if (workspaceFolders && workspaceFolders.length > 0) {
@@ -184,7 +175,10 @@ export class PackageVersionCommands {
       false
     );
     const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
-    const maxSeverity = config.get<string>(CONFIG_KEYS.AUDIT_MAX_SEVERITY, "low");
+    const maxSeverity = config.get<string>(
+      CONFIG_KEYS.AUDIT_MAX_SEVERITY,
+      "low"
+    );
 
     const versions = this.versionFilter.filterVersions(
       metadata,
@@ -194,14 +188,14 @@ export class PackageVersionCommands {
 
     // Audit versions if enabled
     if (auditEnabled) {
-      const versionStrings = versions.map(v => v.version);
+      const versionStrings = versions.map((v) => v.version);
       const auditResults = await this.auditService.auditPackageVersions(
         packageName,
         versionStrings
       );
 
       // Attach vulnerability data to versions
-      versions.forEach(v => {
+      versions.forEach((v) => {
         v.vulnerabilities = auditResults.get(v.version) || [];
       });
     }
@@ -216,12 +210,12 @@ export class PackageVersionCommands {
     const items = versions.map((v) => {
       const vulnDescription = this.getVulnerabilitySummary(v.vulnerabilities);
       const safetyStatus = this.getSafetyStatus(v, maxSeverity);
-      
+
       // Build description: comprehensive safety status + vulnerability summary
-      const description = vulnDescription 
-        ? `${safetyStatus.icon} ${safetyStatus.text} | ${vulnDescription}` 
+      const description = vulnDescription
+        ? `${safetyStatus.icon} ${safetyStatus.text} | ${vulnDescription}`
         : `${safetyStatus.icon} ${safetyStatus.text}`;
-      
+
       return {
         label: v.version,
         description,
@@ -240,8 +234,12 @@ export class PackageVersionCommands {
     if (selected) {
       // If version has vulnerabilities, offer to view them first
       if (selected.vulnerabilities && selected.vulnerabilities.length > 0) {
-        const viewedVuln = await this.showVulnerabilityDetails(selected.vulnerabilities, packageName, selected.version);
-        
+        const viewedVuln = await this.showVulnerabilityDetails(
+          selected.vulnerabilities,
+          packageName,
+          selected.version
+        );
+
         // Ask if they want to proceed with the update
         if (viewedVuln) {
           const proceed = await vscode.window.showWarningMessage(
@@ -249,13 +247,13 @@ export class PackageVersionCommands {
             "Update Anyway",
             "Cancel"
           );
-          
+
           if (proceed !== "Update Anyway") {
             return;
           }
         }
       }
-      
+
       await vscode.commands.executeCommand(
         COMMANDS.UPDATE_PACKAGE_VERSION,
         packageName,
@@ -281,7 +279,10 @@ export class PackageVersionCommands {
       false
     );
     const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
-    const maxSeverity = config.get<string>(CONFIG_KEYS.AUDIT_MAX_SEVERITY, "low");
+    const maxSeverity = config.get<string>(
+      CONFIG_KEYS.AUDIT_MAX_SEVERITY,
+      "low"
+    );
 
     const versions = this.versionFilter.filterVersions(
       metadata,
@@ -291,14 +292,14 @@ export class PackageVersionCommands {
 
     // Audit versions if enabled
     if (auditEnabled) {
-      const versionStrings = versions.map(v => v.version);
+      const versionStrings = versions.map((v) => v.version);
       const auditResults = await this.auditService.auditPackageVersions(
         packageName,
         versionStrings
       );
 
       // Attach vulnerability data to versions
-      versions.forEach(v => {
+      versions.forEach((v) => {
         v.vulnerabilities = auditResults.get(v.version) || [];
       });
     }
@@ -313,12 +314,12 @@ export class PackageVersionCommands {
     const items = versions.map((v) => {
       const vulnDescription = this.getVulnerabilitySummary(v.vulnerabilities);
       const safetyStatus = this.getSafetyStatus(v, maxSeverity);
-      
+
       // Build description: comprehensive safety status + vulnerability summary
-      const description = vulnDescription 
-        ? `${safetyStatus.icon} ${safetyStatus.text} | ${vulnDescription}` 
+      const description = vulnDescription
+        ? `${safetyStatus.icon} ${safetyStatus.text} | ${vulnDescription}`
         : `${safetyStatus.icon} ${safetyStatus.text}`;
-      
+
       return {
         label: `${packageName}@${v.version}`,
         description,
@@ -337,8 +338,12 @@ export class PackageVersionCommands {
     if (selected) {
       // If version has vulnerabilities, offer to view them first
       if (selected.vulnerabilities && selected.vulnerabilities.length > 0) {
-        const viewedVuln = await this.showVulnerabilityDetails(selected.vulnerabilities, packageName, selected.version);
-        
+        const viewedVuln = await this.showVulnerabilityDetails(
+          selected.vulnerabilities,
+          packageName,
+          selected.version
+        );
+
         // Ask if they want to proceed with the update
         if (viewedVuln) {
           const proceed = await vscode.window.showWarningMessage(
@@ -346,13 +351,13 @@ export class PackageVersionCommands {
             "Update Anyway",
             "Cancel"
           );
-          
+
           if (proceed !== "Update Anyway") {
             return;
           }
         }
       }
-      
+
       await vscode.commands.executeCommand(
         COMMANDS.UPDATE_PACKAGE_MANAGER_VERSION,
         `${packageName}@${selected.version}`
@@ -370,25 +375,29 @@ export class PackageVersionCommands {
   /**
    * Get comprehensive safety status considering both quarantine and vulnerabilities
    */
-  private getSafetyStatus(version: any, maxSeverity: string): { icon: string; text: string } {
+  private getSafetyStatus(
+    version: any,
+    maxSeverity: string
+  ): { icon: string; text: string } {
     const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
     const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
-    
+
     const passesQuarantine = version.isSafe;
-    const hasVulnerabilities = version.vulnerabilities && version.vulnerabilities.length > 0;
-    
+    const hasVulnerabilities =
+      version.vulnerabilities && version.vulnerabilities.length > 0;
+
     // Check if has vulnerabilities above threshold
     let hasBlockingVulns = false;
     if (auditEnabled && hasVulnerabilities) {
       const severityOrder = ["critical", "high", "moderate", "low", "info"];
       const maxSeverityIndex = severityOrder.indexOf(maxSeverity);
-      
+
       hasBlockingVulns = version.vulnerabilities.some((v: any) => {
         const vulnIndex = severityOrder.indexOf(v.severity);
         return vulnIndex < maxSeverityIndex;
       });
     }
-    
+
     // Determine status
     if (passesQuarantine && !hasBlockingVulns) {
       return { icon: "✓", text: "Ok" };
@@ -407,10 +416,14 @@ export class PackageVersionCommands {
   private getVulnerabilityIndicator(vulnerabilities?: any[]): string {
     if (!vulnerabilities || vulnerabilities.length === 0) return "";
 
-    const critical = vulnerabilities.filter(v => v.severity === "critical").length;
-    const high = vulnerabilities.filter(v => v.severity === "high").length;
-    const moderate = vulnerabilities.filter(v => v.severity === "moderate").length;
-    const low = vulnerabilities.filter(v => v.severity === "low").length;
+    const critical = vulnerabilities.filter(
+      (v) => v.severity === "critical"
+    ).length;
+    const high = vulnerabilities.filter((v) => v.severity === "high").length;
+    const moderate = vulnerabilities.filter(
+      (v) => v.severity === "moderate"
+    ).length;
+    const low = vulnerabilities.filter((v) => v.severity === "low").length;
 
     const parts: string[] = [];
     if (critical > 0) parts.push(`${critical}C`);
@@ -430,7 +443,7 @@ export class PackageVersionCommands {
     packageName: string,
     version: string
   ): Promise<boolean> {
-    const items = vulnerabilities.map(v => ({
+    const items = vulnerabilities.map((v) => ({
       label: `${this.getSeverityIcon(v.severity)} ${v.title}`,
       description: v.severity.toUpperCase(),
       detail: v.url,
@@ -448,7 +461,7 @@ export class PackageVersionCommands {
       await vscode.env.openExternal(vscode.Uri.parse(selected.url));
       return true;
     }
-    
+
     return false;
   }
 
@@ -457,11 +470,16 @@ export class PackageVersionCommands {
    */
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case "critical": return "⛔";
-      case "high": return "🔴";
-      case "moderate": return "🟠";
-      case "low": return "🟡";
-      default: return "ℹ️";
+      case "critical":
+        return "⛔";
+      case "high":
+        return "🔴";
+      case "moderate":
+        return "🟠";
+      case "low":
+        return "🟡";
+      default:
+        return "ℹ️";
     }
   }
 
@@ -471,10 +489,14 @@ export class PackageVersionCommands {
   private getVulnerabilitySummary(vulnerabilities?: any[]): string {
     if (!vulnerabilities || vulnerabilities.length === 0) return "";
 
-    const critical = vulnerabilities.filter(v => v.severity === "critical").length;
-    const high = vulnerabilities.filter(v => v.severity === "high").length;
-    const moderate = vulnerabilities.filter(v => v.severity === "moderate").length;
-    const low = vulnerabilities.filter(v => v.severity === "low").length;
+    const critical = vulnerabilities.filter(
+      (v) => v.severity === "critical"
+    ).length;
+    const high = vulnerabilities.filter((v) => v.severity === "high").length;
+    const moderate = vulnerabilities.filter(
+      (v) => v.severity === "moderate"
+    ).length;
+    const low = vulnerabilities.filter((v) => v.severity === "low").length;
 
     const parts: string[] = [];
     if (critical > 0) parts.push(`⛔ ${critical} Critical`);

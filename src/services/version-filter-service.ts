@@ -125,18 +125,24 @@ export class VersionFilterService {
     versions: SafeVersion[],
     maxSeverity: VulnerabilitySeverity = "low"
   ): SafeVersion[] {
-    const severityOrder: VulnerabilitySeverity[] = ["critical", "high", "moderate", "low", "info"];
+    const severityOrder: VulnerabilitySeverity[] = [
+      "critical",
+      "high",
+      "moderate",
+      "low",
+      "info"
+    ];
     const maxSeverityIndex = severityOrder.indexOf(maxSeverity);
-    
+
     if (maxSeverityIndex === -1) return versions; // Invalid severity, return all
 
-    return versions.filter(v => {
+    return versions.filter((v) => {
       if (!v.vulnerabilities || v.vulnerabilities.length === 0) {
         return true; // No vulnerabilities, version is safe
       }
 
       // Check if any vulnerability is above the max severity
-      const hasHigherSeverity = v.vulnerabilities.some(vuln => {
+      const hasHigherSeverity = v.vulnerabilities.some((vuln) => {
         const vulnSeverityIndex = severityOrder.indexOf(vuln.severity);
         return vulnSeverityIndex < maxSeverityIndex; // Lower index = higher severity
       });
@@ -153,7 +159,10 @@ export class VersionFilterService {
     maxVulnerabilitySeverity: VulnerabilitySeverity = "low"
   ): SafeVersion[] {
     const quarantineSafe = this.getSafeVersions(allVersions);
-    return this.filterByVulnerabilities(quarantineSafe, maxVulnerabilitySeverity);
+    return this.filterByVulnerabilities(
+      quarantineSafe,
+      maxVulnerabilitySeverity
+    );
   }
 
   /**
@@ -164,7 +173,10 @@ export class VersionFilterService {
     majorVersion: number,
     maxVulnerabilitySeverity: VulnerabilitySeverity = "low"
   ): SafeVersion | null {
-    const safeWithAudit = this.getSafeVersionsWithAudit(allVersions, maxVulnerabilitySeverity);
+    const safeWithAudit = this.getSafeVersionsWithAudit(
+      allVersions,
+      maxVulnerabilitySeverity
+    );
     const inMajor = safeWithAudit.filter(
       (v) => this.getMajorVersion(v.version) === majorVersion
     );

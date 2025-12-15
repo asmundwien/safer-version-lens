@@ -32,7 +32,12 @@ export interface SafeVersion {
   vulnerabilities?: Vulnerability[];
 }
 
-export type VulnerabilitySeverity = "critical" | "high" | "moderate" | "low" | "info";
+export type VulnerabilitySeverity =
+  | "critical"
+  | "high"
+  | "moderate"
+  | "low"
+  | "info";
 
 export interface Vulnerability {
   id: number;

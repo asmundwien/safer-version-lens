@@ -222,14 +222,14 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
         // Audit versions if enabled
         if (auditEnabled) {
-          const versionStrings = allVersions.map(v => v.version);
+          const versionStrings = allVersions.map((v) => v.version);
           const auditResults = await this.auditService.auditPackageVersions(
             packageName,
             versionStrings
           );
 
           // Attach vulnerability data to versions
-          allVersions.forEach(v => {
+          allVersions.forEach((v) => {
             v.vulnerabilities = auditResults.get(v.version) || [];
           });
         }
@@ -311,14 +311,14 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
       // Audit versions if enabled
       if (auditEnabled) {
-        const versionStrings = allVersions.map(v => v.version);
+        const versionStrings = allVersions.map((v) => v.version);
         const auditResults = await this.auditService.auditPackageVersions(
           packageName,
           versionStrings
         );
 
         // Attach vulnerability data to versions
-        allVersions.forEach(v => {
+        allVersions.forEach((v) => {
           v.vulnerabilities = auditResults.get(v.version) || [];
         });
       }

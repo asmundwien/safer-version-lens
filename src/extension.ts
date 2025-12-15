@@ -6,7 +6,7 @@ import { PackageManagerFactory } from "./services/package-managers/package-manag
 import { IPackageManagerService } from "./services/package-managers/package-manager.interface";
 import { PackageVersionCommands, ConfigCommands } from "./commands";
 import { CodeLensButtonsFactory } from "./providers/code-lens-buttons.factory";
-import { PATTERNS, CONFIG_SECTION, CONFIG_KEYS } from "./constants";
+import { PATTERNS, CONFIG_SECTION } from "./constants";
 
 let codeLensProvider: SaferVersionCodeLensProvider;
 let packageManagerService: IPackageManagerService | null = null;

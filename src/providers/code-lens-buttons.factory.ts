@@ -10,19 +10,6 @@ export class CodeLensButtonsFactory {
   constructor(private versionFilter: VersionFilterService) {}
 
   /**
-   * Get icon for vulnerability severity
-   */
-  private getVulnerabilityIcon(severity: string): string {
-    switch (severity) {
-      case "critical": return "$(warning)";
-      case "high": return "$(warning)";
-      case "moderate": return "$(alert)";
-      case "low": return "$(info)";
-      default: return "";
-    }
-  }
-
-  /**
    * Create version update buttons for a package
    */
   createVersionButtons(
@@ -40,14 +27,27 @@ export class CodeLensButtonsFactory {
     // Get max vulnerability severity from config
     const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
     const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
-    const maxSeverity = config.get<VulnerabilitySeverity>(CONFIG_KEYS.AUDIT_MAX_SEVERITY, "low");
+    const maxSeverity = config.get<VulnerabilitySeverity>(
+      CONFIG_KEYS.AUDIT_MAX_SEVERITY,
+      "low"
+    );
 
     // Button 1: Latest safe in current major (with audit if enabled)
     const latestInCurrentMajor = auditEnabled
-      ? this.versionFilter.getLatestSafeVersionInMajorWithAudit(allVersions, currentMajor, maxSeverity)
-      : this.versionFilter.getLatestSafeVersionInMajor(allVersions, currentMajor);
+      ? this.versionFilter.getLatestSafeVersionInMajorWithAudit(
+          allVersions,
+          currentMajor,
+          maxSeverity
+        )
+      : this.versionFilter.getLatestSafeVersionInMajor(
+          allVersions,
+          currentMajor
+        );
 
-    if (latestInCurrentMajor && latestInCurrentMajor.version !== currentVersion) {
+    if (
+      latestInCurrentMajor &&
+      latestInCurrentMajor.version !== currentVersion
+    ) {
       const vulnIcon = this.getVulnerabilityIndicator(latestInCurrentMajor);
       codeLenses.push(
         new vscode.CodeLens(range, {
@@ -57,7 +57,10 @@ export class CodeLensButtonsFactory {
             sectionName === "packageManager"
               ? [`${packageName}@${latestInCurrentMajor.version}`]
               : [packageName, latestInCurrentMajor.version, sectionName],
-          tooltip: this.getVersionTooltip(latestInCurrentMajor, `Update to latest safe version in v${currentMajor}`)
+          tooltip: this.getVersionTooltip(
+            latestInCurrentMajor,
+            `Update to latest safe version in v${currentMajor}`
+          )
         })
       );
     }
@@ -65,8 +68,15 @@ export class CodeLensButtonsFactory {
     // Button 2: Latest safe in latest major (if different)
     if (latestMajor > currentMajor) {
       const latestInLatestMajor = auditEnabled
-        ? this.versionFilter.getLatestSafeVersionInMajorWithAudit(allVersions, latestMajor, maxSeverity)
-        : this.versionFilter.getLatestSafeVersionInMajor(allVersions, latestMajor);
+        ? this.versionFilter.getLatestSafeVersionInMajorWithAudit(
+            allVersions,
+            latestMajor,
+            maxSeverity
+          )
+        : this.versionFilter.getLatestSafeVersionInMajor(
+            allVersions,
+            latestMajor
+          );
 
       if (latestInLatestMajor) {
         const vulnIcon = this.getVulnerabilityIndicator(latestInLatestMajor);
@@ -78,7 +88,10 @@ export class CodeLensButtonsFactory {
               sectionName === "packageManager"
                 ? [`${packageName}@${latestInLatestMajor.version}`]
                 : [packageName, latestInLatestMajor.version, sectionName],
-            tooltip: this.getVersionTooltip(latestInLatestMajor, `Update to latest safe version in v${latestMajor} (latest major)`)
+            tooltip: this.getVersionTooltip(
+              latestInLatestMajor,
+              `Update to latest safe version in v${latestMajor} (latest major)`
+            )
           })
         );
       }
@@ -95,16 +108,24 @@ export class CodeLensButtonsFactory {
       return "";
     }
 
-    const critical = version.vulnerabilities.filter(v => v.severity === "critical").length;
-    const high = version.vulnerabilities.filter(v => v.severity === "high").length;
-    const moderate = version.vulnerabilities.filter(v => v.severity === "moderate").length;
-    const low = version.vulnerabilities.filter(v => v.severity === "low").length;
+    const critical = version.vulnerabilities.filter(
+      (v) => v.severity === "critical"
+    ).length;
+    const high = version.vulnerabilities.filter(
+      (v) => v.severity === "high"
+    ).length;
+    const moderate = version.vulnerabilities.filter(
+      (v) => v.severity === "moderate"
+    ).length;
+    const low = version.vulnerabilities.filter(
+      (v) => v.severity === "low"
+    ).length;
 
     if (critical > 0) return ` $(warning)${critical}C`;
     if (high > 0) return ` $(warning)${high}H`;
     if (moderate > 0) return ` $(alert)${moderate}M`;
     if (low > 0) return ` $(info)${low}L`;
-    
+
     return "";
   }
 
@@ -117,7 +138,7 @@ export class CodeLensButtonsFactory {
     }
 
     const vulnSummary = version.vulnerabilities
-      .map(v => `${v.severity.toUpperCase()}: ${v.title}`)
+      .map((v) => `${v.severity.toUpperCase()}: ${v.title}`)
       .join("\n");
 
     return `${baseTooltip}\n\nVulnerabilities:\n${vulnSummary}`;

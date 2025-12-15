@@ -5,11 +5,13 @@ A VS Code extension that shows safe package versions respecting your package man
 ## Features
 
 ### 🔒 Time Quarantine Support
+
 - **Respects pnpm's `minimum-release-age`**: Only suggests versions that have aged beyond your configured quarantine period
 - **Visual indicators**: Clear badges showing which versions are safe vs. in quarantine
 - **Multi-package manager**: Support for pnpm (with npm/yarn detection coming)
 
 ### 🛡️ Security Vulnerability Auditing
+
 - **Automatic vulnerability scanning**: Checks NPM security advisories for all package versions
 - **Visual vulnerability indicators**: Shows security status with color-coded emojis
   - `⛔ Critical` - Critical severity vulnerabilities
@@ -22,6 +24,7 @@ A VS Code extension that shows safe package versions respecting your package man
 - **Cached results**: 30-minute cache for fast subsequent checks
 
 ### 📦 Version Update CodeLens
+
 - **Inline version buttons**: Click to update directly from CodeLens
   - `↑ Latest in current major` - Safest patch/minor update
   - `🚀 Latest major` - Upgrade to newest major version
@@ -30,6 +33,7 @@ A VS Code extension that shows safe package versions respecting your package man
 - **Package manager updates**: Update `packageManager` field (e.g., `pnpm@10.21.0`)
 
 ### ⚙️ Toggle Controls
+
 - Enable/disable the extension on-the-fly
 - Show/hide pre-release versions (alpha, beta, rc, etc.)
 
@@ -60,21 +64,26 @@ This extension contributes the following settings:
 ## How It Works
 
 ### Time Quarantine
+
 **Note**: Currently only supported for pnpm 10.21.0+. Yarn and npm quarantine support is on the roadmap.
 
 When you set `minimumReleaseAge` in your `pnpm-workspace.yaml` file:
+
 ```yaml
-minimumReleaseAge: 10080  # 7 days in minutes
+minimumReleaseAge: 10080 # 7 days in minutes
 ```
 
 The extension will:
+
 1. Fetch package metadata from the NPM registry
 2. Calculate the age of each version since publication
 3. Only suggest versions older than your configured threshold
 4. Show time-since-release info for versions in quarantine
 
 ### Security Auditing
+
 The extension:
+
 1. Queries the NPM security advisory API for all displayed versions
 2. Uses semver range matching to show only vulnerabilities affecting each specific version
 3. Filters versions with vulnerabilities above your `auditMaxSeverity` setting
