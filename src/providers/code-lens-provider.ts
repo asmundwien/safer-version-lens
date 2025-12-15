@@ -144,23 +144,17 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
     minimumReleaseAge: number,
     codeLenses: vscode.CodeLens[]
   ): Promise<void> {
-    if (!dependencies) {
-      return;
-    }
+    if (!dependencies) return;
 
     const config = vscode.workspace.getConfiguration("saferVersionLens");
     const showPrerelease = config.get<boolean>("showPrerelease", false);
     const text = document.getText();
 
     for (const [packageName, currentVersion] of Object.entries(dependencies)) {
-      if (shouldSkipVersion(currentVersion)) {
-        continue;
-      }
+      if (shouldSkipVersion(currentVersion)) continue;
 
       const location = findDependencyInSection(text, packageName, sectionName);
-      if (!location) {
-        continue;
-      }
+      if (!location) continue;
 
       const position = document.positionAt(location.position);
       const range = new vscode.Range(position, position);
@@ -168,9 +162,8 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       try {
         const metadata =
           await this.npmRegistry.fetchPackageMetadata(packageName);
-        if (!metadata) {
-          continue;
-        }
+
+        if (!metadata) continue;
 
         // Filter versions - exclude prereleases if showPrerelease is false
         const allVersions = this.versionFilter.filterVersions(
@@ -184,19 +177,28 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         const currentMajor = parseInt(currentVersionClean.split(".")[0], 10);
 
         // Get latest major version
-        const latestMajor = this.versionFilter.getLatestMajorVersion(allVersions);
+        const latestMajor =
+          this.versionFilter.getLatestMajorVersion(allVersions);
 
         // Button 1: Latest safe in current major
-        const latestInCurrentMajor = this.versionFilter.getLatestSafeVersionInMajor(
-          allVersions,
-          currentMajor
-        );
-        if (latestInCurrentMajor && latestInCurrentMajor.version !== currentVersionClean) {
+        const latestInCurrentMajor =
+          this.versionFilter.getLatestSafeVersionInMajor(
+            allVersions,
+            currentMajor
+          );
+        if (
+          latestInCurrentMajor &&
+          latestInCurrentMajor.version !== currentVersionClean
+        ) {
           codeLenses.push(
             new vscode.CodeLens(range, {
               title: `$(arrow-up) ${latestInCurrentMajor.version}`,
               command: "safer-version-lens.updatePackageVersion",
-              arguments: [packageName, latestInCurrentMajor.version, sectionName],
+              arguments: [
+                packageName,
+                latestInCurrentMajor.version,
+                sectionName
+              ],
               tooltip: `Update to latest safe version in v${currentMajor}`
             })
           );
@@ -204,16 +206,21 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
         // Button 2: Latest safe in latest major (if different from current major)
         if (latestMajor > currentMajor) {
-          const latestInLatestMajor = this.versionFilter.getLatestSafeVersionInMajor(
-            allVersions,
-            latestMajor
-          );
+          const latestInLatestMajor =
+            this.versionFilter.getLatestSafeVersionInMajor(
+              allVersions,
+              latestMajor
+            );
           if (latestInLatestMajor) {
             codeLenses.push(
               new vscode.CodeLens(range, {
                 title: `$(rocket) ${latestInLatestMajor.version}`,
                 command: "safer-version-lens.updatePackageVersion",
-                arguments: [packageName, latestInLatestMajor.version, sectionName],
+                arguments: [
+                  packageName,
+                  latestInLatestMajor.version,
+                  sectionName
+                ],
                 tooltip: `Update to latest safe version in v${latestMajor} (latest major)`
               })
             );
@@ -225,11 +232,10 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           new vscode.CodeLens(range, {
             title: "$(versions) all versions",
             command: "safer-version-lens.showVersionInfo",
-            arguments: [packageName, minimumReleaseAge],
+            arguments: [packageName, minimumReleaseAge, sectionName],
             tooltip: "View all available versions"
           })
         );
-
       } catch (error) {
         console.error(`Error processing ${packageName}:`, error);
       }

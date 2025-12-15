@@ -17,9 +17,7 @@ export class NpmRegistryService {
   ): Promise<PackageMetadata | null> {
     // Check cache first
     const cached = this.cache.get(packageName);
-    if (cached) {
-      return cached;
-    }
+    if (cached) return cached;
 
     try {
       const registry = this.getRegistry();

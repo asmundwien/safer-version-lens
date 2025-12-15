@@ -23,14 +23,10 @@ export class VersionFilterService {
 
     for (const [version, versionData] of Object.entries(metadata.versions)) {
       // Skip pre-releases if requested
-      if (excludePrerelease && this.isPrerelease(version)) {
-        continue;
-      }
+      if (excludePrerelease && this.isPrerelease(version)) continue;
 
       const publishTimeStr = metadata.time[version];
-      if (!publishTimeStr) {
-        continue;
-      }
+      if (!publishTimeStr) continue;
 
       const publishedAt = new Date(publishTimeStr);
       const age = now - publishedAt.getTime();
@@ -66,15 +62,11 @@ export class VersionFilterService {
    */
   getLatestSafeVersion(allVersions: SafeVersion[]): SafeVersion | null {
     const safe = this.getSafeVersions(allVersions);
-    if (safe.length === 0) {
-      return null;
-    }
+    if (safe.length === 0) return null;
 
     // First try to find a stable version
     const stableVersion = safe.find((v) => !this.isPrerelease(v.version));
-    if (stableVersion) {
-      return stableVersion;
-    }
+    if (stableVersion) return stableVersion;
 
     // If no stable version, return the latest pre-release
     return safe[0];
@@ -109,9 +101,7 @@ export class VersionFilterService {
       (v) => this.getMajorVersion(v.version) === majorVersion
     );
 
-    if (inMajor.length === 0) {
-      return null;
-    }
+    if (inMajor.length === 0) return null;
 
     // Prefer stable over prerelease
     const stable = inMajor.find((v) => !this.isPrerelease(v.version));
@@ -123,10 +113,7 @@ export class VersionFilterService {
    */
   getLatestMajorVersion(allVersions: SafeVersion[]): number {
     const safe = this.getSafeVersions(allVersions);
-    if (safe.length === 0) {
-      return 0;
-    }
-
+    if (safe.length === 0) return 0;
     return Math.max(...safe.map((v) => this.getMajorVersion(v.version)));
   }
 }

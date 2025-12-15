@@ -41,9 +41,7 @@ export class PnpmConfigService {
         const value = trimmed.split(":")[1]?.trim();
         if (value) {
           const parsed = parseInt(value, 10);
-          if (!isNaN(parsed)) {
-            return parsed;
-          }
+          if (!isNaN(parsed)) return parsed;
         }
       }
     }

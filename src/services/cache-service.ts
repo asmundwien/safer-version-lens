@@ -8,9 +8,7 @@ export class CacheService<T> {
 
   get(key: string): T | null {
     const cached = this.cache.get(key);
-    if (!cached) {
-      return null;
-    }
+    if (!cached) return null;
 
     if (Date.now() - cached.timestamp > this.ttl) {
       this.cache.delete(key);
