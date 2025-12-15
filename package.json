@@ -70,6 +70,30 @@
           "type": "string",
           "default": "https://registry.npmjs.org",
           "description": "NPM registry URL to fetch package information from"
+        },
+        "saferVersionLens.auditEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable security vulnerability auditing for package versions"
+        },
+        "saferVersionLens.auditMaxSeverity": {
+          "type": "string",
+          "default": "low",
+          "enum": [
+            "critical",
+            "high",
+            "moderate",
+            "low",
+            "info"
+          ],
+          "enumDescriptions": [
+            "Only suggest versions with critical vulnerabilities or lower",
+            "Only suggest versions with high vulnerabilities or lower",
+            "Only suggest versions with moderate vulnerabilities or lower",
+            "Only suggest versions with low vulnerabilities or lower (recommended)",
+            "Suggest all versions regardless of vulnerability severity"
+          ],
+          "description": "Maximum allowed vulnerability severity for suggested versions"
         }
       }
     }
@@ -94,6 +118,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/semver": "^7.7.1",
     "@types/vscode": "^1.107.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
@@ -105,5 +130,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1"
   },
-  "packageManager": "pnpm@10.25.0"
+  "packageManager": "pnpm@10.25.0",
+  "dependencies": {
+    "semver": "^7.7.3"
+  }
 }

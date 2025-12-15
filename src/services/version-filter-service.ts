@@ -1,4 +1,4 @@
-import { PackageMetadata, SafeVersion } from "../types";
+import { PackageMetadata, SafeVersion, VulnerabilitySeverity } from "../types";
 import { formatAge, minutesToMs } from "../utils/date-utils";
 
 export class VersionFilterService {
@@ -115,5 +115,64 @@ export class VersionFilterService {
     const safe = this.getSafeVersions(allVersions);
     if (safe.length === 0) return 0;
     return Math.max(...safe.map((v) => this.getMajorVersion(v.version)));
+  }
+
+  /**
+   * Filter versions by vulnerability severity
+   * Excludes versions with vulnerabilities above the max allowed severity
+   */
+  filterByVulnerabilities(
+    versions: SafeVersion[],
+    maxSeverity: VulnerabilitySeverity = "low"
+  ): SafeVersion[] {
+    const severityOrder: VulnerabilitySeverity[] = ["critical", "high", "moderate", "low", "info"];
+    const maxSeverityIndex = severityOrder.indexOf(maxSeverity);
+    
+    if (maxSeverityIndex === -1) return versions; // Invalid severity, return all
+
+    return versions.filter(v => {
+      if (!v.vulnerabilities || v.vulnerabilities.length === 0) {
+        return true; // No vulnerabilities, version is safe
+      }
+
+      // Check if any vulnerability is above the max severity
+      const hasHigherSeverity = v.vulnerabilities.some(vuln => {
+        const vulnSeverityIndex = severityOrder.indexOf(vuln.severity);
+        return vulnSeverityIndex < maxSeverityIndex; // Lower index = higher severity
+      });
+
+      return !hasHigherSeverity;
+    });
+  }
+
+  /**
+   * Get safe versions considering both quarantine and vulnerabilities
+   */
+  getSafeVersionsWithAudit(
+    allVersions: SafeVersion[],
+    maxVulnerabilitySeverity: VulnerabilitySeverity = "low"
+  ): SafeVersion[] {
+    const quarantineSafe = this.getSafeVersions(allVersions);
+    return this.filterByVulnerabilities(quarantineSafe, maxVulnerabilitySeverity);
+  }
+
+  /**
+   * Get the latest safe version in a major, considering vulnerabilities
+   */
+  getLatestSafeVersionInMajorWithAudit(
+    allVersions: SafeVersion[],
+    majorVersion: number,
+    maxVulnerabilitySeverity: VulnerabilitySeverity = "low"
+  ): SafeVersion | null {
+    const safeWithAudit = this.getSafeVersionsWithAudit(allVersions, maxVulnerabilitySeverity);
+    const inMajor = safeWithAudit.filter(
+      (v) => this.getMajorVersion(v.version) === majorVersion
+    );
+
+    if (inMajor.length === 0) return null;
+
+    // Prefer stable over prerelease
+    const stable = inMajor.find((v) => !this.isPrerelease(v.version));
+    return stable || inMajor[0];
   }
 }

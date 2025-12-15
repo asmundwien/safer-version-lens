@@ -25,7 +25,9 @@ export const CONFIG_SECTION = "saferVersionLens";
 export const CONFIG_KEYS = {
   ENABLED: "enabled",
   SHOW_PRERELEASE: "showPrerelease",
-  REGISTRY: "registry"
+  REGISTRY: "registry",
+  AUDIT_ENABLED: "auditEnabled",
+  AUDIT_MAX_SEVERITY: "auditMaxSeverity"
 } as const;
 
 /**

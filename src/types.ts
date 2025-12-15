@@ -29,4 +29,20 @@ export interface SafeVersion {
   publishedAt: Date;
   isSafe: boolean;
   reason?: string;
+  vulnerabilities?: Vulnerability[];
+}
+
+export type VulnerabilitySeverity = "critical" | "high" | "moderate" | "low" | "info";
+
+export interface Vulnerability {
+  id: number;
+  title: string;
+  severity: VulnerabilitySeverity;
+  url: string;
+  vulnerable_versions: string;
+  module_name: string;
+}
+
+export interface AuditResponse {
+  [packageName: string]: Vulnerability[];
 }

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { NpmRegistryService } from "../services/npm-registry-service";
 import { IPackageManagerService } from "../services/package-managers/package-manager.interface";
 import { VersionFilterService } from "../services/version-filter-service";
+import { AuditService } from "../services/audit-service";
 import { CodeLensButtonsFactory } from "./code-lens-buttons.factory";
 import {
   findDependencyInSection,
@@ -13,13 +14,16 @@ import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
+  private auditService: AuditService;
 
   constructor(
     private npmRegistry: NpmRegistryService,
     private packageManagerService: IPackageManagerService | null,
     private versionFilter: VersionFilterService,
     private buttonsFactory: CodeLensButtonsFactory
-  ) {}
+  ) {
+    this.auditService = new AuditService();
+  }
 
   refresh(): void {
     this._onDidChangeCodeLenses.fire();
@@ -191,6 +195,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       CONFIG_KEYS.SHOW_PRERELEASE,
       false
     );
+    const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
     const text = document.getText();
 
     for (const [packageName, currentVersion] of Object.entries(dependencies)) {
@@ -214,6 +219,20 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           minimumReleaseAge,
           !showPrerelease
         );
+
+        // Audit versions if enabled
+        if (auditEnabled) {
+          const versionStrings = allVersions.map(v => v.version);
+          const auditResults = await this.auditService.auditPackageVersions(
+            packageName,
+            versionStrings
+          );
+
+          // Attach vulnerability data to versions
+          allVersions.forEach(v => {
+            v.vulnerabilities = auditResults.get(v.version) || [];
+          });
+        }
 
         const currentVersionClean = currentVersion.replace(/^[^\d]*/, "");
         const currentMajor = parseInt(currentVersionClean.split(".")[0], 10);
@@ -259,6 +278,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       CONFIG_KEYS.SHOW_PRERELEASE,
       false
     );
+    const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
 
     // Find the packageManager field location
     const location = findPackageManagerField(text);
@@ -288,6 +308,20 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         minimumReleaseAge,
         !showPrerelease
       );
+
+      // Audit versions if enabled
+      if (auditEnabled) {
+        const versionStrings = allVersions.map(v => v.version);
+        const auditResults = await this.auditService.auditPackageVersions(
+          packageName,
+          versionStrings
+        );
+
+        // Attach vulnerability data to versions
+        allVersions.forEach(v => {
+          v.vulnerabilities = auditResults.get(v.version) || [];
+        });
+      }
 
       // Create version update buttons
       const versionButtons = this.buttonsFactory.createVersionButtons(
