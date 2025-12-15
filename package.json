@@ -21,6 +21,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "safer-version-lens.updatePackageVersion",
+        "title": "Safer Version Lens: Update Package Version"
+      },
+      {
         "command": "safer-version-lens.showVersionInfo",
         "title": "Safer Version Lens: Show Version Info"
       },
@@ -31,11 +35,29 @@
       {
         "command": "safer-version-lens.showConfig",
         "title": "Safer Version Lens: Show Configuration"
+      },
+      {
+        "command": "safer-version-lens.toggleEnabled",
+        "title": "Safer Version Lens: Toggle Enabled"
+      },
+      {
+        "command": "safer-version-lens.togglePrerelease",
+        "title": "Safer Version Lens: Toggle Pre-release Versions"
       }
     ],
     "configuration": {
       "title": "Safer Version Lens",
       "properties": {
+        "saferVersionLens.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable or disable Safer Version Lens"
+        },
+        "saferVersionLens.showPrerelease": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show pre-release versions (canary, dev, alpha, beta, rc, etc.)"
+        },
         "saferVersionLens.registry": {
           "type": "string",
           "default": "https://registry.npmjs.org",
