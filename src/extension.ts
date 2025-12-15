@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import { SaferVersionCodeLensProvider } from "./providers/codeLensProvider";
-import { NpmRegistryService } from "./services/npmRegistryService";
-import { PnpmConfigService } from "./services/pnpmConfigService";
-import { VersionFilterService } from "./services/versionFilterService";
+import { SaferVersionCodeLensProvider } from "./providers/code-lens-provider";
+import { NpmRegistryService } from "./services/npm-registry-service";
+import { PnpmConfigService } from "./services/pnpm-config-service";
+import { VersionFilterService } from "./services/version-filter-service";
 
 let codeLensProvider: SaferVersionCodeLensProvider;
 

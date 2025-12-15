@@ -1,5 +1,5 @@
 import { PackageMetadata, SafeVersion } from "../types";
-import { formatAge, minutesToMs } from "../utils/dateUtils";
+import { formatAge, minutesToMs } from "../utils/date-utils";
 
 export class VersionFilterService {
   /**

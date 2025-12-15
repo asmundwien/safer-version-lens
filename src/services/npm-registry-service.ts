@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { PackageMetadata } from "../types";
-import { CacheService } from "./cacheService";
+import { CacheService } from "./cache-service";
 
 export class NpmRegistryService {
   private cache: CacheService<PackageMetadata>;

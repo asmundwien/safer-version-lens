@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
-import { NpmRegistryService } from "../services/npmRegistryService";
-import { PnpmConfigService } from "../services/pnpmConfigService";
-import { VersionFilterService } from "../services/versionFilterService";
+import { NpmRegistryService } from "../services/npm-registry-service";
+import { PnpmConfigService } from "../services/pnpm-config-service";
+import { VersionFilterService } from "../services/version-filter-service";
 import {
   findDependencyInSection,
   shouldSkipVersion
-} from "../utils/packageJsonParser";
+} from "../utils/package-json-parser";
 
 export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();

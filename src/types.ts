@@ -18,7 +18,10 @@ export interface VersionInfo {
 }
 
 export interface PnpmConfig {
-  minimumReleaseAge?: number; // in minutes
+  /**
+   * Minimum release age in minutes
+   */
+  minimumReleaseAge?: number;
 }
 
 export interface SafeVersion {
