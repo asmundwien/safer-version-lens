@@ -72,3 +72,22 @@ function findPackageInText(
     position: offset + match.index
   };
 }
+
+/**
+ * Find the packageManager field in package.json
+ */
+export function findPackageManagerField(
+  text: string
+): { spec: string; position: number } | null {
+  const packageManagerRegex = /"packageManager"\s*:\s*"([^"]+)"/;
+  const match = packageManagerRegex.exec(text);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    spec: match[1],
+    position: match.index
+  };
+}

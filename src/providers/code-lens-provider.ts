@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
 import { NpmRegistryService } from "../services/npm-registry-service";
-import { PnpmConfigService } from "../services/pnpm-config-service";
+import { IPackageManagerService } from "../services/package-managers/package-manager.interface";
 import { VersionFilterService } from "../services/version-filter-service";
 import {
   findDependencyInSection,
+  findPackageManagerField,
   shouldSkipVersion
 } from "../utils/package-json-parser";
 
@@ -13,7 +14,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
   constructor(
     private npmRegistry: NpmRegistryService,
-    private pnpmConfig: PnpmConfigService,
+    private packageManagerService: IPackageManagerService | null,
     private versionFilter: VersionFilterService
   ) {}
 
@@ -69,9 +70,29 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         return [];
       }
 
-      const minimumReleaseAge = await this.pnpmConfig.getMinimumReleaseAge(
-        workspaceFolder.uri
-      );
+      // Check if package manager service is available and supports the feature
+      if (!this.packageManagerService) {
+        console.log("[SaferVersionLens] No package manager detected");
+        return [];
+      }
+
+      if (!this.packageManagerService.isFeatureSupported()) {
+        const reason = this.packageManagerService.getUnsupportedReason();
+        console.log("[SaferVersionLens] Feature not supported:", reason);
+        
+        // Show warning at top of file
+        const topRange = new vscode.Range(0, 0, 0, 0);
+        return [
+          new vscode.CodeLens(topRange, {
+            title: `$(warning) ${reason}`,
+            command: "",
+            tooltip: reason
+          })
+        ];
+      }
+
+      const pmConfig = await this.packageManagerService.getConfig(workspaceFolder.uri);
+      const minimumReleaseAge = pmConfig.minimumReleaseAge;
 
       console.log("[SaferVersionLens] Minimum release age:", minimumReleaseAge);
 
@@ -102,6 +123,17 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
             : "Click to show pre-release versions"
         })
       );
+
+      // Add packageManager version update button
+      if (packageJson.packageManager) {
+        await this.processPackageManager(
+          document,
+          text,
+          packageJson.packageManager,
+          minimumReleaseAge,
+          codeLenses
+        );
+      }
 
       await this.processDependencies(
         document,
@@ -239,6 +271,100 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       } catch (error) {
         console.error(`Error processing ${packageName}:`, error);
       }
+    }
+  }
+
+  /**
+   * Process packageManager field and add CodeLens for version updates
+   */
+  private async processPackageManager(
+    document: vscode.TextDocument,
+    text: string,
+    packageManagerSpec: string,
+    minimumReleaseAge: number,
+    codeLenses: vscode.CodeLens[]
+  ): Promise<void> {
+    const config = vscode.workspace.getConfiguration("saferVersionLens");
+    const showPrerelease = config.get<boolean>("showPrerelease", false);
+
+    // Find the packageManager field location
+    const location = findPackageManagerField(text);
+    if (!location) {
+      return;
+    }
+
+    // Extract package manager name and version from spec (e.g., "pnpm@10.25.0")
+    const match = packageManagerSpec.match(/^([^@]+)@([\d.]+)$/);
+    if (!match) {
+      return;
+    }
+
+    const [, packageName, currentVersion] = match;
+    const position = document.positionAt(location.position);
+    const range = new vscode.Range(position, position);
+
+    try {
+      // Fetch package metadata from npm registry
+      const metadata = await this.npmRegistry.fetchPackageMetadata(packageName);
+      if (!metadata) {
+        return;
+      }
+
+      // Filter versions
+      const allVersions = this.versionFilter.filterVersions(
+        metadata,
+        minimumReleaseAge,
+        !showPrerelease
+      );
+
+      const currentMajor = parseInt(currentVersion.split(".")[0], 10);
+      const latestMajor = this.versionFilter.getLatestMajorVersion(allVersions);
+
+      // Button 1: Latest safe in current major
+      const latestInCurrentMajor = this.versionFilter.getLatestSafeVersionInMajor(
+        allVersions,
+        currentMajor
+      );
+      if (latestInCurrentMajor && latestInCurrentMajor.version !== currentVersion) {
+        codeLenses.push(
+          new vscode.CodeLens(range, {
+            title: `$(arrow-small-up) ${packageName}@${latestInCurrentMajor.version}`,
+            command: "safer-version-lens.updatePackageManagerVersion",
+            arguments: [`${packageName}@${latestInCurrentMajor.version}`],
+            tooltip: `Update to latest safe ${packageName} version in v${currentMajor}`
+          })
+        );
+      }
+
+      // Button 2: Latest safe in latest major (if different)
+      if (latestMajor > currentMajor) {
+        const latestInLatestMajor = this.versionFilter.getLatestSafeVersionInMajor(
+          allVersions,
+          latestMajor
+        );
+        if (latestInLatestMajor) {
+          codeLenses.push(
+            new vscode.CodeLens(range, {
+              title: `$(rocket) ${packageName}@${latestInLatestMajor.version}`,
+              command: "safer-version-lens.updatePackageManagerVersion",
+              arguments: [`${packageName}@${latestInLatestMajor.version}`],
+              tooltip: `Update to latest safe ${packageName} version in v${latestMajor} (latest major)`
+            })
+          );
+        }
+      }
+
+      // Button 3: Show all versions
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: "$(versions) all versions",
+          command: "safer-version-lens.showPackageManagerVersions",
+          arguments: [packageName, minimumReleaseAge],
+          tooltip: `View all available ${packageName} versions`
+        })
+      );
+    } catch (error) {
+      console.error(`Error processing package manager ${packageName}:`, error);
     }
   }
 }
