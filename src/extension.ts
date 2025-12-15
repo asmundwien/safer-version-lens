@@ -83,10 +83,6 @@ export function activate(context: vscode.ExtensionContext) {
             targetVersion
           );
         });
-
-        vscode.window.showInformationMessage(
-          `Updated ${packageName} to ${targetVersion}`
-        );
       } catch (error) {
         vscode.window.showErrorMessage(
           `Failed to update package: ${error instanceof Error ? error.message : String(error)}`
@@ -98,7 +94,11 @@ export function activate(context: vscode.ExtensionContext) {
   // Command to show detailed version information
   const showVersionInfoCommand = vscode.commands.registerCommand(
     "safer-version-lens.showVersionInfo",
-    async (packageName: string, minimumReleaseAge: number) => {
+    async (
+      packageName: string,
+      minimumReleaseAge: number,
+      sectionName: string
+    ) => {
       const metadata = await npmRegistry.fetchPackageMetadata(packageName);
       if (!metadata) {
         vscode.window.showInformationMessage(
@@ -129,7 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
         label: v.version,
         description: v.isSafe ? "✓ Safe" : "⚠ In quarantine",
         detail: `Published: ${v.publishedAt.toLocaleDateString()} ${v.publishedAt.toLocaleTimeString()}${v.reason ? " - " + v.reason : ""}`,
-        version: v
+        version: v.version
       }));
 
       const selected = await vscode.window.showQuickPick(items, {
@@ -139,8 +139,12 @@ export function activate(context: vscode.ExtensionContext) {
       });
 
       if (selected) {
-        vscode.window.showInformationMessage(
-          `${packageName}@${selected.version} - ${selected.description}`
+        // Call the update command to apply the version change
+        await vscode.commands.executeCommand(
+          "safer-version-lens.updatePackageVersion",
+          packageName,
+          selected.version,
+          sectionName
         );
       }
     }
@@ -193,7 +197,11 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       const config = vscode.workspace.getConfiguration("saferVersionLens");
       const currentValue = config.get<boolean>("enabled", true);
-      await config.update("enabled", !currentValue, vscode.ConfigurationTarget.Global);
+      await config.update(
+        "enabled",
+        !currentValue,
+        vscode.ConfigurationTarget.Global
+      );
       vscode.window.showInformationMessage(
         `Safer Version Lens ${!currentValue ? "enabled" : "disabled"}`
       );
@@ -207,7 +215,11 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       const config = vscode.workspace.getConfiguration("saferVersionLens");
       const currentValue = config.get<boolean>("showPrerelease", false);
-      await config.update("showPrerelease", !currentValue, vscode.ConfigurationTarget.Global);
+      await config.update(
+        "showPrerelease",
+        !currentValue,
+        vscode.ConfigurationTarget.Global
+      );
       vscode.window.showInformationMessage(
         `Pre-release versions ${!currentValue ? "shown" : "hidden"}`
       );
