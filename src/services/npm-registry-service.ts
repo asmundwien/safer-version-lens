@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { PackageMetadata } from "../types";
 import { CacheService } from "./cache-service";
+import { CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 
 export class NpmRegistryService {
   private cache: CacheService<PackageMetadata>;
@@ -48,8 +49,10 @@ export class NpmRegistryService {
    * Get the npm registry URL from configuration
    */
   private getRegistry(): string {
-    const config = vscode.workspace.getConfiguration("saferVersionLens");
-    return config.get<string>("registry") || "https://registry.npmjs.org";
+    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    return (
+      config.get<string>(CONFIG_KEYS.REGISTRY) || "https://registry.npmjs.org"
+    );
   }
 
   /**

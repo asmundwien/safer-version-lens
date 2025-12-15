@@ -2,11 +2,13 @@ import * as vscode from "vscode";
 import { NpmRegistryService } from "../services/npm-registry-service";
 import { IPackageManagerService } from "../services/package-managers/package-manager.interface";
 import { VersionFilterService } from "../services/version-filter-service";
+import { CodeLensButtonsFactory } from "./code-lens-buttons.factory";
 import {
   findDependencyInSection,
   findPackageManagerField,
   shouldSkipVersion
 } from "../utils/package-json-parser";
+import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 
 export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
@@ -15,7 +17,8 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
   constructor(
     private npmRegistry: NpmRegistryService,
     private packageManagerService: IPackageManagerService | null,
-    private versionFilter: VersionFilterService
+    private versionFilter: VersionFilterService,
+    private buttonsFactory: CodeLensButtonsFactory
   ) {}
 
   refresh(): void {
@@ -32,8 +35,8 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
     );
 
     // Check if lens is enabled
-    const config = vscode.workspace.getConfiguration("saferVersionLens");
-    const enabled = config.get<boolean>("enabled", true);
+    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    const enabled = config.get<boolean>(CONFIG_KEYS.ENABLED, true);
 
     if (!document.fileName.endsWith("package.json")) {
       console.log("[SaferVersionLens] Not a package.json file, skipping");
@@ -49,7 +52,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       return [
         new vscode.CodeLens(topRange, {
           title: "$(check) Enable Safer Version Lens",
-          command: "safer-version-lens.toggleEnabled",
+          command: COMMANDS.TOGGLE_ENABLED,
           tooltip: "Click to enable Safer Version Lens"
         })
       ];
@@ -79,7 +82,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       if (!this.packageManagerService.isFeatureSupported()) {
         const reason = this.packageManagerService.getUnsupportedReason();
         console.log("[SaferVersionLens] Feature not supported:", reason);
-        
+
         // Show warning at top of file
         const topRange = new vscode.Range(0, 0, 0, 0);
         return [
@@ -91,7 +94,9 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         ];
       }
 
-      const pmConfig = await this.packageManagerService.getConfig(workspaceFolder.uri);
+      const pmConfig = await this.packageManagerService.getConfig(
+        workspaceFolder.uri
+      );
       const minimumReleaseAge = pmConfig.minimumReleaseAge;
 
       console.log("[SaferVersionLens] Minimum release age:", minimumReleaseAge);
@@ -105,19 +110,22 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(topRange, {
           title: "$(circle-slash) Disable Lens",
-          command: "safer-version-lens.toggleEnabled",
+          command: COMMANDS.TOGGLE_ENABLED,
           tooltip: "Click to disable Safer Version Lens"
         })
       );
 
       // Toggle pre-release button
-      const showPrerelease = config.get<boolean>("showPrerelease", false);
+      const showPrerelease = config.get<boolean>(
+        CONFIG_KEYS.SHOW_PRERELEASE,
+        false
+      );
       codeLenses.push(
         new vscode.CodeLens(topRange, {
           title: showPrerelease
             ? "$(eye-closed) Hide Pre-releases"
             : "$(eye) Show Pre-releases",
-          command: "safer-version-lens.togglePrerelease",
+          command: COMMANDS.TOGGLE_PRERELEASE,
           tooltip: showPrerelease
             ? "Click to hide pre-release versions"
             : "Click to show pre-release versions"
@@ -178,8 +186,11 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
   ): Promise<void> {
     if (!dependencies) return;
 
-    const config = vscode.workspace.getConfiguration("saferVersionLens");
-    const showPrerelease = config.get<boolean>("showPrerelease", false);
+    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    const showPrerelease = config.get<boolean>(
+      CONFIG_KEYS.SHOW_PRERELEASE,
+      false
+    );
     const text = document.getText();
 
     for (const [packageName, currentVersion] of Object.entries(dependencies)) {
@@ -204,69 +215,28 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           !showPrerelease
         );
 
-        // Extract current major version
-        const currentVersionClean = currentVersion.replace(/^[^\d]*/, ""); // Remove ^, ~, etc.
+        const currentVersionClean = currentVersion.replace(/^[^\d]*/, "");
         const currentMajor = parseInt(currentVersionClean.split(".")[0], 10);
 
-        // Get latest major version
-        const latestMajor =
-          this.versionFilter.getLatestMajorVersion(allVersions);
+        // Create version update buttons
+        const versionButtons = this.buttonsFactory.createVersionButtons(
+          range,
+          packageName,
+          currentVersionClean,
+          allVersions,
+          sectionName
+        );
+        codeLenses.push(...versionButtons);
 
-        // Button 1: Latest safe in current major
-        const latestInCurrentMajor =
-          this.versionFilter.getLatestSafeVersionInMajor(
-            allVersions,
-            currentMajor
-          );
-        if (
-          latestInCurrentMajor &&
-          latestInCurrentMajor.version !== currentVersionClean
-        ) {
-          codeLenses.push(
-            new vscode.CodeLens(range, {
-              title: `$(arrow-up) ${latestInCurrentMajor.version}`,
-              command: "safer-version-lens.updatePackageVersion",
-              arguments: [
-                packageName,
-                latestInCurrentMajor.version,
-                sectionName
-              ],
-              tooltip: `Update to latest safe version in v${currentMajor}`
-            })
-          );
-        }
-
-        // Button 2: Latest safe in latest major (if different from current major)
-        if (latestMajor > currentMajor) {
-          const latestInLatestMajor =
-            this.versionFilter.getLatestSafeVersionInMajor(
-              allVersions,
-              latestMajor
-            );
-          if (latestInLatestMajor) {
-            codeLenses.push(
-              new vscode.CodeLens(range, {
-                title: `$(rocket) ${latestInLatestMajor.version}`,
-                command: "safer-version-lens.updatePackageVersion",
-                arguments: [
-                  packageName,
-                  latestInLatestMajor.version,
-                  sectionName
-                ],
-                tooltip: `Update to latest safe version in v${latestMajor} (latest major)`
-              })
-            );
-          }
-        }
-
-        // Button 3: Show all versions
+        // Add "all versions" button
         codeLenses.push(
-          new vscode.CodeLens(range, {
-            title: "$(versions) all versions",
-            command: "safer-version-lens.showVersionInfo",
-            arguments: [packageName, minimumReleaseAge, sectionName],
-            tooltip: "View all available versions"
-          })
+          this.buttonsFactory.createAllVersionsButton(
+            range,
+            packageName,
+            minimumReleaseAge,
+            sectionName,
+            false
+          )
         );
       } catch (error) {
         console.error(`Error processing ${packageName}:`, error);
@@ -284,8 +254,11 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
     minimumReleaseAge: number,
     codeLenses: vscode.CodeLens[]
   ): Promise<void> {
-    const config = vscode.workspace.getConfiguration("saferVersionLens");
-    const showPrerelease = config.get<boolean>("showPrerelease", false);
+    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    const showPrerelease = config.get<boolean>(
+      CONFIG_KEYS.SHOW_PRERELEASE,
+      false
+    );
 
     // Find the packageManager field location
     const location = findPackageManagerField(text);
@@ -310,61 +283,35 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         return;
       }
 
-      // Filter versions
       const allVersions = this.versionFilter.filterVersions(
         metadata,
         minimumReleaseAge,
         !showPrerelease
       );
 
-      const currentMajor = parseInt(currentVersion.split(".")[0], 10);
-      const latestMajor = this.versionFilter.getLatestMajorVersion(allVersions);
-
-      // Button 1: Latest safe in current major
-      const latestInCurrentMajor = this.versionFilter.getLatestSafeVersionInMajor(
+      // Create version update buttons
+      const versionButtons = this.buttonsFactory.createVersionButtons(
+        range,
+        packageName,
+        currentVersion,
         allVersions,
-        currentMajor
+        "packageManager",
+        COMMANDS.UPDATE_PACKAGE_MANAGER_VERSION
       );
-      if (latestInCurrentMajor && latestInCurrentMajor.version !== currentVersion) {
-        codeLenses.push(
-          new vscode.CodeLens(range, {
-            title: `$(arrow-small-up) ${packageName}@${latestInCurrentMajor.version}`,
-            command: "safer-version-lens.updatePackageManagerVersion",
-            arguments: [`${packageName}@${latestInCurrentMajor.version}`],
-            tooltip: `Update to latest safe ${packageName} version in v${currentMajor}`
-          })
-        );
-      }
+      codeLenses.push(...versionButtons);
 
-      // Button 2: Latest safe in latest major (if different)
-      if (latestMajor > currentMajor) {
-        const latestInLatestMajor = this.versionFilter.getLatestSafeVersionInMajor(
-          allVersions,
-          latestMajor
-        );
-        if (latestInLatestMajor) {
-          codeLenses.push(
-            new vscode.CodeLens(range, {
-              title: `$(rocket) ${packageName}@${latestInLatestMajor.version}`,
-              command: "safer-version-lens.updatePackageManagerVersion",
-              arguments: [`${packageName}@${latestInLatestMajor.version}`],
-              tooltip: `Update to latest safe ${packageName} version in v${latestMajor} (latest major)`
-            })
-          );
-        }
-      }
-
-      // Button 3: Show all versions
+      // Add "all versions" button
       codeLenses.push(
-        new vscode.CodeLens(range, {
-          title: "$(versions) all versions",
-          command: "safer-version-lens.showPackageManagerVersions",
-          arguments: [packageName, minimumReleaseAge],
-          tooltip: `View all available ${packageName} versions`
-        })
+        this.buttonsFactory.createAllVersionsButton(
+          range,
+          packageName,
+          minimumReleaseAge,
+          "packageManager",
+          true
+        )
       );
     } catch (error) {
-      console.error(`Error processing package manager ${packageName}:`, error);
+      console.error(`Error processing ${packageName}:`, error);
     }
   }
 }
