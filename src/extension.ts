@@ -1,26 +1,145 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import { SaferVersionCodeLensProvider } from "./providers/codeLensProvider";
+import { NpmRegistryService } from "./services/npmRegistryService";
+import { PnpmConfigService } from "./services/pnpmConfigService";
+import { VersionFilterService } from "./services/versionFilterService";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+let codeLensProvider: SaferVersionCodeLensProvider;
+
 export function activate(context: vscode.ExtensionContext) {
+  console.log("Safer Version Lens is now active!");
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "safer-version-lens" is now active!');
+  // Initialize services
+  const npmRegistry = new NpmRegistryService();
+  const pnpmConfig = new PnpmConfigService();
+  const versionFilter = new VersionFilterService();
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('safer-version-lens.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Safer Version Lens!');
-	});
+  // Create and register CodeLens provider
+  codeLensProvider = new SaferVersionCodeLensProvider(
+    npmRegistry,
+    pnpmConfig,
+    versionFilter
+  );
 
-	context.subscriptions.push(disposable);
+  const codeLensDisposable = vscode.languages.registerCodeLensProvider(
+    { language: "json", pattern: "**/package.json" },
+    codeLensProvider
+  );
+
+  // Command to show detailed version information
+  const showVersionInfoCommand = vscode.commands.registerCommand(
+    "safer-version-lens.showVersionInfo",
+    async (packageName: string, minimumReleaseAge: number) => {
+      const metadata = await npmRegistry.fetchPackageMetadata(packageName);
+      if (!metadata) {
+        vscode.window.showInformationMessage(
+          `Package ${packageName} not found`
+        );
+        return;
+      }
+
+      const versions = versionFilter.filterVersions(
+        metadata,
+        minimumReleaseAge
+      );
+
+      if (versions.length === 0) {
+        vscode.window.showInformationMessage(
+          `No versions found for ${packageName}`
+        );
+        return;
+      }
+
+      const items = versions.map((v) => ({
+        label: v.version,
+        description: v.isSafe ? "✓ Safe" : "⚠ In quarantine",
+        detail: `Published: ${v.publishedAt.toLocaleDateString()} ${v.publishedAt.toLocaleTimeString()}${v.reason ? " - " + v.reason : ""}`,
+        version: v
+      }));
+
+      const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: `Select a version for ${packageName}`,
+        matchOnDescription: true,
+        matchOnDetail: true
+      });
+
+      if (selected) {
+        vscode.window.showInformationMessage(
+          `${packageName}@${selected.version} - ${selected.description}`
+        );
+      }
+    }
+  );
+
+  // Command to refresh code lenses
+  const refreshCommand = vscode.commands.registerCommand(
+    "safer-version-lens.refresh",
+    () => {
+      npmRegistry.clearCache();
+      codeLensProvider.refresh();
+      vscode.window.showInformationMessage("Safer Version Lens refreshed");
+    }
+  );
+
+  // Command to show current configuration
+  const showConfigCommand = vscode.commands.registerCommand(
+    "safer-version-lens.showConfig",
+    async () => {
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (!workspaceFolders) {
+        vscode.window.showInformationMessage("No workspace folder open");
+        return;
+      }
+
+      const config = await pnpmConfig.getPnpmConfig(workspaceFolders[0].uri);
+      const minimumReleaseAge = config.minimumReleaseAge ?? 0;
+
+      if (minimumReleaseAge === 0) {
+        vscode.window.showInformationMessage(
+          "No time quarantine configured. All versions will be shown."
+        );
+      } else {
+        const days = Math.floor(minimumReleaseAge / (60 * 24));
+        const hours = Math.floor((minimumReleaseAge % (60 * 24)) / 60);
+        vscode.window.showInformationMessage(
+          `Time quarantine: ${minimumReleaseAge} minutes (${days}d ${hours}h)`
+        );
+      }
+    }
+  );
+
+  // Watch for configuration changes
+  const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(
+    (e) => {
+      if (e.affectsConfiguration("saferVersionLens")) {
+        npmRegistry.clearCache();
+        codeLensProvider.refresh();
+      }
+    }
+  );
+
+  // Watch for pnpm-workspace.yaml file changes
+  const fileWatcher = vscode.workspace.createFileSystemWatcher(
+    "**/pnpm-workspace.yaml"
+  );
+  fileWatcher.onDidChange(() => {
+    codeLensProvider.refresh();
+  });
+  fileWatcher.onDidCreate(() => {
+    codeLensProvider.refresh();
+  });
+  fileWatcher.onDidDelete(() => {
+    codeLensProvider.refresh();
+  });
+
+  context.subscriptions.push(
+    codeLensDisposable,
+    showVersionInfoCommand,
+    refreshCommand,
+    showConfigCommand,
+    configChangeDisposable,
+    fileWatcher
+  );
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
