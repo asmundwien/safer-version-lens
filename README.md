@@ -1,71 +1,100 @@
-# safer-version-lens README
+# Safer Version Lens
 
-This is the README for your extension "safer-version-lens". After writing up a brief description, we recommend including the following sections.
+A VS Code extension that shows safe package versions respecting your package manager's time quarantine configuration, with built-in security vulnerability auditing.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### 🔒 Time Quarantine Support
+- **Respects pnpm's `minimum-release-age`**: Only suggests versions that have aged beyond your configured quarantine period
+- **Visual indicators**: Clear badges showing which versions are safe vs. in quarantine
+- **Multi-package manager**: Support for pnpm (with npm/yarn detection coming)
 
-For example if there is an image subfolder under your extension project workspace:
+### 🛡️ Security Vulnerability Auditing
+- **Automatic vulnerability scanning**: Checks NPM security advisories for all package versions
+- **Visual vulnerability indicators**: Shows security status with color-coded emojis
+  - `⛔ Critical` - Critical severity vulnerabilities
+  - `🔴 High` - High severity vulnerabilities
+  - `🟠 Moderate` - Moderate severity vulnerabilities
+  - `🟡 Low` - Low severity vulnerabilities
+- **Accurate version matching**: Uses semver ranges to show only vulnerabilities that affect each specific version
+- **Smart filtering**: Won't suggest versions with vulnerabilities above your configured threshold (default: low severity)
+- **Clickable vulnerability links**: View detailed security advisories in your browser
+- **Cached results**: 30-minute cache for fast subsequent checks
 
-\!\[feature X\]\(images/feature-x.png\)
+### 📦 Version Update CodeLens
+- **Inline version buttons**: Click to update directly from CodeLens
+  - `↑ Latest in current major` - Safest patch/minor update
+  - `🚀 Latest major` - Upgrade to newest major version
+  - `📋 all versions` - Browse complete version list
+- **Works on dependencies**: supports `dependencies`, `devDependencies`, `peerDependencies`
+- **Package manager updates**: Update `packageManager` field (e.g., `pnpm@10.21.0`)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### ⚙️ Toggle Controls
+- Enable/disable the extension on-the-fly
+- Show/hide pre-release versions (alpha, beta, rc, etc.)
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- **VS Code 1.107.0 or higher**
+- **Package manager**: One of:
+  - pnpm 10.21.0+ (for `minimum-release-age` support)
+  - npm (time quarantine not yet supported)
+  - yarn (time quarantine not yet supported)
+- **Corepack** (recommended): For automatic package manager version detection
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-- `myExtension.enable`: Enable/disable this extension.
-- `myExtension.thing`: Set to `blah` to do something.
+- `saferVersionLens.enabled`: Enable/disable Safer Version Lens (default: `false`)
+- `saferVersionLens.showPrerelease`: Show pre-release versions like alpha, beta, rc (default: `false`)
+- `saferVersionLens.registry`: NPM registry URL to fetch package information from (default: `"https://registry.npmjs.org"`)
+- `saferVersionLens.auditEnabled`: Enable security vulnerability auditing (default: `true`)
+- `saferVersionLens.auditMaxSeverity`: Maximum allowed vulnerability severity for suggested versions (default: `"low"`)
+  - `"critical"` - Allow only versions with critical vulnerabilities or lower
+  - `"high"` - Allow up to and including high severity
+  - `"moderate"` - Allow up to and including moderate severity
+  - `"low"` - Allow up to and including low severity (**recommended**)
+  - `"info"` - Show all versions regardless of vulnerabilities
+
+## How It Works
+
+### Time Quarantine
+**Note**: Currently only supported for pnpm 10.21.0+. Yarn and npm quarantine support is on the roadmap.
+
+When you set `minimumReleaseAge` in your `pnpm-workspace.yaml` file:
+```yaml
+minimumReleaseAge: 10080  # 7 days in minutes
+```
+
+The extension will:
+1. Fetch package metadata from the NPM registry
+2. Calculate the age of each version since publication
+3. Only suggest versions older than your configured threshold
+4. Show time-since-release info for versions in quarantine
+
+### Security Auditing
+The extension:
+1. Queries the NPM security advisory API for all displayed versions
+2. Uses semver range matching to show only vulnerabilities affecting each specific version
+3. Filters versions with vulnerabilities above your `auditMaxSeverity` setting
+4. Shows vulnerability counts and severities in version descriptions
+5. Provides clickable links to detailed security advisories
+
+**Note**: The version list shows ALL versions (including vulnerable ones) so you can make informed decisions, but the quick-update buttons only suggest secure versions.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- Yarn and npm time quarantine support not yet implemented (detection only)
+- No keyboard shortcuts for common actions
 
-## Release Notes
+## Roadmap
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+- [ ] Yarn time quarantine support (via `--install.update-stable-delay`)
+- [ ] npm time quarantine support (via custom config)
+- [ ] Workspace-wide package updates
+- [ ] Batch vulnerability remediation
 
 ---
 
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-- Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-- Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**Enjoy safer dependency management!**
