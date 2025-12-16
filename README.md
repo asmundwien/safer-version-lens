@@ -23,11 +23,10 @@ It also supports **time quarantine** (pnpm/Yarn/npm configs) so you can avoid �
 
 1. Install **Safer Version Lens** from the Marketplace
 2. Open any `package.json`
-3. Enable via Command Palette: `Safer Version Lens: Toggle Enabled`
-4. Look above each dependency for CodeLens update actions
-5. Click a version to update instantly — or browse `all versions` for details
+3. Look above each dependency for CodeLens update actions
+4. Click a version to update instantly — or browse `all versions` for details
 
-No configuration required to get started.
+No configuration required to get started — the extension is **enabled by default**.
 
 ---
 
@@ -93,7 +92,7 @@ The extension will avoid suggesting versions still “too fresh”.
 
 | Setting                           | Default                    | Description                                      |
 | --------------------------------- | -------------------------- | ------------------------------------------------ |
-| saferVersionLens.enabled          | false                      | Enable/disable Safer Version Lens                |
+| saferVersionLens.enabled          | true                       | Enable/disable Safer Version Lens                |
 | saferVersionLens.showPrerelease   | false                      | Show pre-release versions                        |
 | saferVersionLens.registry         | https://registry.npmjs.org | Registry URL                                     |
 | saferVersionLens.auditEnabled     | true                       | Enable vulnerability auditing                    |
@@ -111,7 +110,7 @@ The extension will avoid suggesting versions still “too fresh”.
 
 **No CodeLens showing?**
 
-- Enable the extension (Toggle Enabled)
+- Check the extension is enabled (use `Toggle Enabled` command if needed)
 - Open package.json
 - Do you even have dependencies, devDependencies, peerDependencies, or packageManager?
 

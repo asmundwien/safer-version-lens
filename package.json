@@ -56,7 +56,7 @@
       "properties": {
         "saferVersionLens.enabled": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Enable or disable Safer Version Lens"
         },
         "saferVersionLens.showPrerelease": {
