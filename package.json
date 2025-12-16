@@ -22,22 +22,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "safer-version-lens.updatePackageVersion",
-        "title": "Safer Version Lens: Update Package Version"
-      },
-      {
-        "command": "safer-version-lens.updatePackageManagerVersion",
-        "title": "Safer Version Lens: Update Package Manager Version"
-      },
-      {
-        "command": "safer-version-lens.showVersionInfo",
-        "title": "Safer Version Lens: Show Version Info"
-      },
-      {
-        "command": "safer-version-lens.showPackageManagerVersions",
-        "title": "Safer Version Lens: Show Package Manager Versions"
-      },
-      {
         "command": "safer-version-lens.refresh",
         "title": "Safer Version Lens: Refresh"
       },
