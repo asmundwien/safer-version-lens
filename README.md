@@ -5,6 +5,8 @@
 Safer Version Lens adds CodeLens to your `package.json` showing upgrade options **with vulnerability indicators**, so you can update packages without switching tabs, tools, or mental models.
 It also supports **time quarantine** (pnpm/Yarn/npm configs) so you can avoid “published 6 minutes ago” releases when you're more of the conservative type.
 
+By marking vulnerable versions **directly in your editor — before you install them** — the extension helps you stay aware of risk, for instance in the aftermath of a supply-chain attack.
+
 > It won’t make dependency management _safe_. But it will make it _less exciting_.
 
 ---
@@ -13,6 +15,7 @@ It also supports **time quarantine** (pnpm/Yarn/npm configs) so you can avoid �
 
 - **Inline version suggestions** (patch/minor/major + “all versions”)
 - **Security vulnerability indicators** per version (using npm advisory data)
+- **Clickable vulnerability lists** — inspect all known vulnerabilities for a version and open each advisory (CVE) directly
 - **Quick-update filtering** by max allowed vulnerability severity
 - **Time quarantine support** (respects your package manager’s age-gate config)
 - **Caching + async fetching** to keep the editor responsive
@@ -32,11 +35,21 @@ No configuration required to get started — the extension is **enabled by defau
 
 ## Screenshots
 
-> Add your images here (see “Adding images” below)
+### Inline CodeLens actions
 
-- Inline CodeLens actions
-- All versions view with vulnerability context
-- Time quarantine indicators
+![Inline CodeLens actions](images/package-json-example-03.png)
+
+### Browse all versions with vulnerability context
+
+![All versions view](images/all-versions-vulnerable-example-01.png)
+
+### Read up on vulnerabilities for a specific version
+
+![List of vulnerabilities](images/vulnerability-list-example-01.png)
+
+### Time quarantine indicators
+
+![Time quarantine](images/all-versions-quarantine-example-02.png)
 
 ---
 
@@ -62,7 +75,11 @@ Versions show severity indicators:
 - `🟡 Low`
 - `✅` None known
 
+Clicking a version marked as vulnerable opens a detailed list of all known vulnerabilities for that version, with direct links to their advisory (CVE) pages.
+
 Quick-update buttons can automatically **exclude versions above your configured severity threshold**.
+
+This makes it easier to understand _what_ you’re patching — and _why_ — instead of blindly upgrading everything anything.
 
 ### 🔒 Time Quarantine Support (pnpm, Yarn & npm)
 
@@ -104,7 +121,6 @@ The extension will avoid suggesting versions still “too fresh”.
 - Safer Version Lens: Toggle Pre-release Versions
 - Safer Version Lens: Refresh
 - Safer Version Lens: Show Configuration
-- Safer Version Lens: Show Configuration
 
 ## FAQ (Short)
 
@@ -112,7 +128,7 @@ The extension will avoid suggesting versions still “too fresh”.
 
 - Check the extension is enabled (use `Toggle Enabled` command if needed)
 - Open package.json
-- Do you even have dependencies, devDependencies, peerDependencies, or packageManager?
+- Ensure the file contains dependencies, devDependencies, peerDependencies, or a packageManager field
 
 **Suggestions look outdated?**
 
