@@ -2,7 +2,7 @@
   "name": "safer-version-lens",
   "displayName": "Safer Version Lens",
   "description": "Shows safe package versions respecting pnpm's minimum release age (time quarantine) configuration",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "asmundwien",
   "icon": "icon.png",
   "repository": {
