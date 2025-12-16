@@ -13,6 +13,7 @@ import {
   getMaxSeverity,
   getVulnerabilityIcon
 } from "../utils/vulnerability-helpers";
+import { Vulnerability } from "../types";
 import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 
 export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
@@ -175,7 +176,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         const currentMajor = parseInt(currentVersionClean.split(".")[0], 10);
 
         // Audit versions if enabled - include current version to check for vulnerabilities
-        let currentVersionVulns: any[] = [];
+        let currentVersionVulns: Vulnerability[] = [];
         if (auditEnabled) {
           const versionStrings = allVersions.map((v) => v.version);
           // Add current version if not already in the list
@@ -195,6 +196,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
           // Get vulnerabilities for current version
           currentVersionVulns = auditResults.get(currentVersionClean) || [];
+          console.log(`[SaferVersionLens] Vulnerabilities for ${packageName}@${currentVersionClean}:`, currentVersionVulns.length);
         }
 
         // Add vulnerability warning CodeLens if current version has vulnerabilities
