@@ -62,9 +62,7 @@ function findPackageInText(
   );
   const match = packageRegex.exec(text);
 
-  if (!match) {
-    return null;
-  }
+  if (!match) return null;
 
   return {
     packageName,
@@ -82,9 +80,7 @@ export function findPackageManagerField(
   const packageManagerRegex = /"packageManager"\s*:\s*"([^"]+)"/;
   const match = packageManagerRegex.exec(text);
 
-  if (!match) {
-    return null;
-  }
+  if (!match) return null;
 
   return {
     spec: match[1],

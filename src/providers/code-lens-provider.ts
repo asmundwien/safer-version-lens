@@ -9,7 +9,10 @@ import {
   findPackageManagerField,
   shouldSkipVersion
 } from "../utils/package-json-parser";
-import { getMaxSeverity, getVulnerabilityIcon } from "../utils/vulnerability-helpers";
+import {
+  getMaxSeverity,
+  getVulnerabilityIcon
+} from "../utils/vulnerability-helpers";
 import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 
 export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
@@ -50,9 +53,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
     // If disabled, return empty array (use status bar to enable)
     if (!enabled) {
-      console.log(
-        "[SaferVersionLens] Extension is disabled"
-      );
+      console.log("[SaferVersionLens] Extension is disabled");
       return [];
     }
 
@@ -196,7 +197,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           if (!versionStrings.includes(currentVersionClean)) {
             versionStrings.push(currentVersionClean);
           }
-          
+
           const auditResults = await this.auditService.auditPackageVersions(
             packageName,
             versionStrings
@@ -206,7 +207,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           allVersions.forEach((v) => {
             v.vulnerabilities = auditResults.get(v.version) || [];
           });
-          
+
           // Get vulnerabilities for current version
           currentVersionVulns = auditResults.get(currentVersionClean) || [];
         }
@@ -216,7 +217,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           const maxSeverity = getMaxSeverity(currentVersionVulns);
           const vulnIcon = getVulnerabilityIcon(maxSeverity);
           const vulnCount = currentVersionVulns.length;
-          
+
           codeLenses.push(
             new vscode.CodeLens(range, {
               title: `${vulnIcon} ${vulnCount} vulnerabilit${vulnCount === 1 ? "y" : "ies"}`,

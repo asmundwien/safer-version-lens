@@ -84,10 +84,10 @@ export class ConfigCommands {
       newValue,
       vscode.ConfigurationTarget.Global
     );
-    
+
     this.codeLensProvider.refresh();
     this.updateStatusBar(newValue);
-    
+
     vscode.window.showInformationMessage(
       `Safer Version Lens ${newValue ? "enabled" : "disabled"}`
     );
@@ -96,10 +96,12 @@ export class ConfigCommands {
   public updateStatusBar(enabled: boolean): void {
     if (enabled) {
       this.statusBarItem.text = "$(eye) Safer Version Lens";
-      this.statusBarItem.tooltip = "Safer Version Lens is enabled. Click to disable.";
+      this.statusBarItem.tooltip =
+        "Safer Version Lens is enabled. Click to disable.";
     } else {
       this.statusBarItem.text = "$(eye-closed) Safer Version Lens";
-      this.statusBarItem.tooltip = "Safer Version Lens is disabled. Click to enable.";
+      this.statusBarItem.tooltip =
+        "Safer Version Lens is disabled. Click to enable.";
     }
   }
 

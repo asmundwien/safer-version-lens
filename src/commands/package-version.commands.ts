@@ -532,5 +532,4 @@ export class PackageVersionCommands {
       return "";
     }
   }
-
 }

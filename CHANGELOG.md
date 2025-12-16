@@ -5,6 +5,7 @@ All notable changes to the "safer-version-lens" extension will be documented in 
 ## [0.0.1] - 2025-12-16
 
 ### Added
+
 - Initial release with core functionality
 - Time quarantine support for pnpm's `minimum-release-age` configuration
 - Security vulnerability auditing with NPM advisory integration
