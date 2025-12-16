@@ -58,11 +58,25 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   packageVersionCommands.register(context);
 
+  // Create status bar item for enable/disable toggle
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    100
+  );
+  statusBarItem.command = "safer-version-lens.toggleEnabled";
+  const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+  const enabled = config.get<boolean>("enabled", true);
+  
   const configCommands = new ConfigCommands(
     codeLensProvider,
-    () => packageManagerService
+    () => packageManagerService,
+    statusBarItem
   );
   configCommands.register(context);
+  configCommands.updateStatusBar(enabled);
+  statusBarItem.show();
+  
+  context.subscriptions.push(statusBarItem);
 
   // Watch for configuration changes
   const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(

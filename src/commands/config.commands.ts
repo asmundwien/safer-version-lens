@@ -9,7 +9,8 @@ import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 export class ConfigCommands {
   constructor(
     private codeLensProvider: SaferVersionCodeLensProvider,
-    private getPackageManagerService: () => IPackageManagerService | null
+    private getPackageManagerService: () => IPackageManagerService | null,
+    private statusBarItem: vscode.StatusBarItem
   ) {}
 
   /**
@@ -76,15 +77,30 @@ export class ConfigCommands {
   private async toggleEnabled(): Promise<void> {
     const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
     const currentValue = config.get<boolean>(CONFIG_KEYS.ENABLED, true);
+    const newValue = !currentValue;
+
     await config.update(
       CONFIG_KEYS.ENABLED,
-      !currentValue,
+      newValue,
       vscode.ConfigurationTarget.Global
     );
-    vscode.window.showInformationMessage(
-      `Safer Version Lens ${!currentValue ? "enabled" : "disabled"}`
-    );
+    
     this.codeLensProvider.refresh();
+    this.updateStatusBar(newValue);
+    
+    vscode.window.showInformationMessage(
+      `Safer Version Lens ${newValue ? "enabled" : "disabled"}`
+    );
+  }
+
+  public updateStatusBar(enabled: boolean): void {
+    if (enabled) {
+      this.statusBarItem.text = "$(eye) Safer Version Lens";
+      this.statusBarItem.tooltip = "Safer Version Lens is enabled. Click to disable.";
+    } else {
+      this.statusBarItem.text = "$(eye-closed) Safer Version Lens";
+      this.statusBarItem.tooltip = "Safer Version Lens is disabled. Click to enable.";
+    }
   }
 
   private async togglePrerelease(): Promise<void> {

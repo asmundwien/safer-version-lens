@@ -106,7 +106,7 @@
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
-    "package:vsix": "pnpm run package && vsce package",
+    "package:vsix": "pnpm run package && vsce package --no-dependencies",
     "install:local": "pnpm run package:vsix && code --install-extension safer-version-lens-0.0.1.vsix",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

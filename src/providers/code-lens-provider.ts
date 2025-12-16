@@ -47,19 +47,12 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       return [];
     }
 
-    // If disabled, only show the enable button
+    // If disabled, return empty array (use status bar to enable)
     if (!enabled) {
       console.log(
-        "[SaferVersionLens] Extension is disabled, showing enable button only"
+        "[SaferVersionLens] Extension is disabled"
       );
-      const topRange = new vscode.Range(0, 0, 0, 0);
-      return [
-        new vscode.CodeLens(topRange, {
-          title: "$(check) Enable Safer Version Lens",
-          command: COMMANDS.TOGGLE_ENABLED,
-          tooltip: "Click to enable Safer Version Lens"
-        })
-      ];
+      return [];
     }
 
     try {
@@ -106,35 +99,6 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       console.log("[SaferVersionLens] Minimum release age:", minimumReleaseAge);
 
       const codeLenses: vscode.CodeLens[] = [];
-
-      // Add toggle buttons at the top of the file
-      const topRange = new vscode.Range(0, 0, 0, 0);
-
-      // Toggle enabled button
-      codeLenses.push(
-        new vscode.CodeLens(topRange, {
-          title: "$(circle-slash) Disable Lens",
-          command: COMMANDS.TOGGLE_ENABLED,
-          tooltip: "Click to disable Safer Version Lens"
-        })
-      );
-
-      // Toggle pre-release button
-      const showPrerelease = config.get<boolean>(
-        CONFIG_KEYS.SHOW_PRERELEASE,
-        false
-      );
-      codeLenses.push(
-        new vscode.CodeLens(topRange, {
-          title: showPrerelease
-            ? "$(eye-closed) Hide Pre-releases"
-            : "$(eye) Show Pre-releases",
-          command: COMMANDS.TOGGLE_PRERELEASE,
-          tooltip: showPrerelease
-            ? "Click to hide pre-release versions"
-            : "Click to show pre-release versions"
-        })
-      );
 
       // Add packageManager version update button
       if (packageJson.packageManager) {
