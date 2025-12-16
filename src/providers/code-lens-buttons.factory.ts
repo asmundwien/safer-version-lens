@@ -51,7 +51,7 @@ export class CodeLensButtonsFactory {
       const vulnIcon = this.getVulnerabilityIndicator(latestInCurrentMajor);
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `$(arrow-small-up) ${latestInCurrentMajor.version}${vulnIcon}`,
+          title: `$(arrow-up) ${latestInCurrentMajor.version}${vulnIcon}`,
           command: commandPrefix,
           arguments:
             sectionName === "packageManager"

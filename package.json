@@ -4,6 +4,7 @@
   "description": "Shows safe package versions respecting pnpm's minimum release age (time quarantine) configuration",
   "version": "0.0.1",
   "publisher": "asmundwien",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/asmundwien/safer-version-lens"
