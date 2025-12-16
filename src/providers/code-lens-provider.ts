@@ -9,6 +9,7 @@ import {
   findPackageManagerField,
   shouldSkipVersion
 } from "../utils/package-json-parser";
+import { getMaxSeverity, getVulnerabilityIcon } from "../utils/vulnerability-helpers";
 import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 
 export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
@@ -212,8 +213,8 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
 
         // Add vulnerability warning CodeLens if current version has vulnerabilities
         if (currentVersionVulns.length > 0) {
-          const maxSeverity = this.getMaxSeverity(currentVersionVulns);
-          const vulnIcon = this.getVulnerabilityIcon(maxSeverity);
+          const maxSeverity = getMaxSeverity(currentVersionVulns);
+          const vulnIcon = getVulnerabilityIcon(maxSeverity);
           const vulnCount = currentVersionVulns.length;
           
           codeLenses.push(
@@ -337,31 +338,6 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       );
     } catch (error) {
       console.error(`Error processing ${packageName}:`, error);
-    }
-  }
-
-  private getMaxSeverity(vulnerabilities: any[]): string {
-    const severityOrder = ["critical", "high", "moderate", "low", "info"];
-    for (const severity of severityOrder) {
-      if (vulnerabilities.some((v) => v.severity === severity)) {
-        return severity;
-      }
-    }
-    return "info";
-  }
-
-  private getVulnerabilityIcon(severity: string): string {
-    switch (severity) {
-      case "critical":
-        return "⛔";
-      case "high":
-        return "🔴";
-      case "moderate":
-        return "🟠";
-      case "low":
-        return "🟡";
-      default:
-        return "ℹ️";
     }
   }
 }

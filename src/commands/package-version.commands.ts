@@ -7,6 +7,11 @@ import { IPackageManagerService } from "../services/package-managers/package-man
 import { AuditService } from "../services/audit-service";
 import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
 import { findDependencyInSection } from "../utils/package-json-parser";
+import {
+  getVulnerabilitySummary,
+  getSafetyStatus,
+  getVulnerabilityIcon
+} from "../utils/vulnerability-helpers";
 
 /**
  * Commands related to package version management
@@ -225,8 +230,8 @@ export class PackageVersionCommands {
     }
 
     const items = versions.map((v) => {
-      const vulnDescription = this.getVulnerabilitySummary(v.vulnerabilities);
-      const safetyStatus = this.getSafetyStatus(v, maxSeverity);
+      const vulnDescription = getVulnerabilitySummary(v.vulnerabilities);
+      const safetyStatus = getSafetyStatus(v, maxSeverity);
 
       // Get version comparison indicator
       const versionIndicator = this.getVersionIndicator(
@@ -336,8 +341,8 @@ export class PackageVersionCommands {
     }
 
     const items = versions.map((v) => {
-      const vulnDescription = this.getVulnerabilitySummary(v.vulnerabilities);
-      const safetyStatus = this.getSafetyStatus(v, maxSeverity);
+      const vulnDescription = getVulnerabilitySummary(v.vulnerabilities);
+      const safetyStatus = getSafetyStatus(v, maxSeverity);
 
       // Build description: comprehensive safety status + vulnerability summary
       const description = vulnDescription
@@ -468,7 +473,7 @@ export class PackageVersionCommands {
     version: string
   ): Promise<boolean> {
     const items = vulnerabilities.map((v) => ({
-      label: `${this.getSeverityIcon(v.severity)} ${v.title}`,
+      label: `${getVulnerabilityIcon(v.severity)} ${v.title}`,
       description: v.severity.toUpperCase(),
       detail: v.url,
       url: v.url
@@ -487,24 +492,6 @@ export class PackageVersionCommands {
     }
 
     return false;
-  }
-
-  /**
-   * Get severity icon for vulnerability display
-   */
-  private getSeverityIcon(severity: string): string {
-    switch (severity) {
-      case "critical":
-        return "⛔";
-      case "high":
-        return "🔴";
-      case "moderate":
-        return "🟠";
-      case "low":
-        return "🟡";
-      default:
-        return "ℹ️";
-    }
   }
 
   /**
@@ -546,24 +533,4 @@ export class PackageVersionCommands {
     }
   }
 
-  private getVulnerabilitySummary(vulnerabilities?: any[]): string {
-    if (!vulnerabilities || vulnerabilities.length === 0) return "";
-
-    const critical = vulnerabilities.filter(
-      (v) => v.severity === "critical"
-    ).length;
-    const high = vulnerabilities.filter((v) => v.severity === "high").length;
-    const moderate = vulnerabilities.filter(
-      (v) => v.severity === "moderate"
-    ).length;
-    const low = vulnerabilities.filter((v) => v.severity === "low").length;
-
-    const parts: string[] = [];
-    if (critical > 0) parts.push(`⛔ ${critical} Critical`);
-    if (high > 0) parts.push(`🔴 ${high} High`);
-    if (moderate > 0) parts.push(`🟠 ${moderate} Moderate`);
-    if (low > 0) parts.push(`🟡 ${low} Low`);
-
-    return parts.join(", ");
-  }
 }
