@@ -6,6 +6,7 @@ import { PackageManagerFactory } from "../services/package-managers/package-mana
 import { IPackageManagerService } from "../services/package-managers/package-manager.interface";
 import { AuditService } from "../services/audit-service";
 import { COMMANDS, CONFIG_SECTION, CONFIG_KEYS } from "../constants";
+import { findDependencyInSection } from "../utils/package-json-parser";
 
 /**
  * Commands related to package version management
@@ -75,15 +76,28 @@ export class PackageVersionCommands {
         return;
       }
 
-      const packageRegex = new RegExp(`("${packageName}"\\s*:\\s*")([^"]+)(")`);
-      const packageMatch = text.match(packageRegex);
-      if (!packageMatch) {
-        vscode.window.showErrorMessage(`Package ${packageName} not found`);
+      // Use existing utility to find the dependency in the section
+      const location = findDependencyInSection(text, packageName, sectionName);
+      
+      if (!location) {
+        vscode.window.showErrorMessage(
+          `Package ${packageName} not found in ${sectionName}`
+        );
         return;
       }
 
-      const startPos = text.indexOf(packageMatch[0]) + packageMatch[1].length;
-      const endPos = startPos + packageMatch[2].length;
+      // Find the exact position of the version string
+      // location.position points to the start of "packageName": "version"
+      // Find the opening quote of the version value
+      const afterPosition = text.indexOf('": "', location.position);
+      
+      if (afterPosition === -1) {
+        vscode.window.showErrorMessage(`Could not locate version for ${packageName}`);
+        return;
+      }
+
+      const startPos = afterPosition + 4; // Length of '": "'
+      const endPos = startPos + location.version.length;
 
       await editor.edit((editBuilder) => {
         editBuilder.replace(
