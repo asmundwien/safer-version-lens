@@ -231,7 +231,7 @@ export class PackageVersionCommands {
 
     const items = versions.map((v) => {
       const vulnDescription = getVulnerabilitySummary(v.vulnerabilities);
-      const safetyStatus = getSafetyStatus(v, maxSeverity);
+      let description = getSafetyStatus(v, maxSeverity);
 
       // Get version comparison indicator
       const versionIndicator = this.getVersionIndicator(
@@ -239,8 +239,6 @@ export class PackageVersionCommands {
         currentVersion
       );
 
-      // Build description: safety status + vulnerability summary
-      let description = `${safetyStatus.icon} ${safetyStatus.text}`;
       if (vulnDescription) {
         description += ` | ${vulnDescription}`;
       }
@@ -346,8 +344,8 @@ export class PackageVersionCommands {
 
       // Build description: comprehensive safety status + vulnerability summary
       const description = vulnDescription
-        ? `${safetyStatus.icon} ${safetyStatus.text} | ${vulnDescription}`
-        : `${safetyStatus.icon} ${safetyStatus.text}`;
+        ? `${safetyStatus} | ${vulnDescription}`
+        : `${safetyStatus}`;
 
       return {
         label: `${packageName}@${v.version}`,
@@ -399,68 +397,6 @@ export class PackageVersionCommands {
     this.auditService.clearCache();
     this.codeLensProvider.refresh();
     vscode.window.showInformationMessage("Safer Version Lens refreshed");
-  }
-
-  /**
-   * Get comprehensive safety status considering both quarantine and vulnerabilities
-   */
-  private getSafetyStatus(
-    version: any,
-    maxSeverity: string
-  ): { icon: string; text: string } {
-    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
-    const auditEnabled = config.get<boolean>(CONFIG_KEYS.AUDIT_ENABLED, true);
-
-    const passesQuarantine = version.isSafe;
-    const hasVulnerabilities =
-      version.vulnerabilities && version.vulnerabilities.length > 0;
-
-    // Check if has vulnerabilities above threshold
-    let hasBlockingVulns = false;
-    if (auditEnabled && hasVulnerabilities) {
-      const severityOrder = ["critical", "high", "moderate", "low", "info"];
-      const maxSeverityIndex = severityOrder.indexOf(maxSeverity);
-
-      hasBlockingVulns = version.vulnerabilities.some((v: any) => {
-        const vulnIndex = severityOrder.indexOf(v.severity);
-        return vulnIndex < maxSeverityIndex;
-      });
-    }
-
-    // Determine status
-    if (passesQuarantine && !hasBlockingVulns) {
-      return { icon: "✓", text: "Ok" };
-    } else if (!passesQuarantine && hasBlockingVulns) {
-      return { icon: "⚠🔒", text: "Quarantine + Vulnerable" };
-    } else if (!passesQuarantine) {
-      return { icon: "⚠", text: "In quarantine" };
-    } else {
-      return { icon: "🔒", text: "Has vulnerabilities" };
-    }
-  }
-
-  /**
-   * Get vulnerability indicator for display
-   */
-  private getVulnerabilityIndicator(vulnerabilities?: any[]): string {
-    if (!vulnerabilities || vulnerabilities.length === 0) return "";
-
-    const critical = vulnerabilities.filter(
-      (v) => v.severity === "critical"
-    ).length;
-    const high = vulnerabilities.filter((v) => v.severity === "high").length;
-    const moderate = vulnerabilities.filter(
-      (v) => v.severity === "moderate"
-    ).length;
-    const low = vulnerabilities.filter((v) => v.severity === "low").length;
-
-    const parts: string[] = [];
-    if (critical > 0) parts.push(`${critical}C`);
-    if (high > 0) parts.push(`${high}H`);
-    if (moderate > 0) parts.push(`${moderate}M`);
-    if (low > 0) parts.push(`${low}L`);
-
-    return parts.length > 0 ? ` 🔒[${parts.join("/")}]` : "";
   }
 
   /**

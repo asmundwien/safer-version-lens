@@ -121,12 +121,13 @@ export class CodeLensButtonsFactory {
       (v) => v.severity === "low"
     ).length;
 
-    if (critical > 0) return ` $(warning)${critical}C`;
-    if (high > 0) return ` $(warning)${high}H`;
-    if (moderate > 0) return ` $(alert)${moderate}M`;
-    if (low > 0) return ` $(info)${low}L`;
+    const indicators: string[] = [];
+    if (critical > 0) indicators.push(`$(error) ${critical}C`);
+    if (high > 0) indicators.push(`$(warning) ${high}H`);
+    if (moderate > 0) indicators.push(`$(info) ${moderate}M`);
+    if (low > 0) indicators.push(`$(circle-outline) ${low}L`);
 
-    return "";
+    return indicators.length > 0 ? ` | ${indicators.join(" ")}` : "";
   }
 
   /**
