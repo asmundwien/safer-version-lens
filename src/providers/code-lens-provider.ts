@@ -184,9 +184,18 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           !showPrerelease
         );
 
-        // Audit versions if enabled
+        const currentVersionClean = currentVersion.replace(/^[^\d]*/, "");
+        const currentMajor = parseInt(currentVersionClean.split(".")[0], 10);
+
+        // Audit versions if enabled - include current version to check for vulnerabilities
+        let currentVersionVulns: any[] = [];
         if (auditEnabled) {
           const versionStrings = allVersions.map((v) => v.version);
+          // Add current version if not already in the list
+          if (!versionStrings.includes(currentVersionClean)) {
+            versionStrings.push(currentVersionClean);
+          }
+          
           const auditResults = await this.auditService.auditPackageVersions(
             packageName,
             versionStrings
@@ -196,10 +205,27 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           allVersions.forEach((v) => {
             v.vulnerabilities = auditResults.get(v.version) || [];
           });
+          
+          // Get vulnerabilities for current version
+          currentVersionVulns = auditResults.get(currentVersionClean) || [];
         }
 
-        const currentVersionClean = currentVersion.replace(/^[^\d]*/, "");
-        const currentMajor = parseInt(currentVersionClean.split(".")[0], 10);
+        // Add vulnerability warning CodeLens if current version has vulnerabilities
+        if (currentVersionVulns.length > 0) {
+          const maxSeverity = this.getMaxSeverity(currentVersionVulns);
+          const vulnIcon = this.getVulnerabilityIcon(maxSeverity);
+          const vulnCount = currentVersionVulns.length;
+          
+          codeLenses.push(
+            new vscode.CodeLens(range, {
+              title: `${vulnIcon} ${vulnCount} vulnerabilit${vulnCount === 1 ? "y" : "ies"}`,
+              command: "",
+              tooltip: currentVersionVulns
+                .map((v) => `${v.severity.toUpperCase()}: ${v.title}`)
+                .join("\n")
+            })
+          );
+        }
 
         // Create version update buttons
         const versionButtons = this.buttonsFactory.createVersionButtons(
@@ -311,6 +337,31 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       );
     } catch (error) {
       console.error(`Error processing ${packageName}:`, error);
+    }
+  }
+
+  private getMaxSeverity(vulnerabilities: any[]): string {
+    const severityOrder = ["critical", "high", "moderate", "low", "info"];
+    for (const severity of severityOrder) {
+      if (vulnerabilities.some((v) => v.severity === severity)) {
+        return severity;
+      }
+    }
+    return "info";
+  }
+
+  private getVulnerabilityIcon(severity: string): string {
+    switch (severity) {
+      case "critical":
+        return "⛔";
+      case "high":
+        return "🔴";
+      case "moderate":
+        return "🟠";
+      case "low":
+        return "🟡";
+      default:
+        return "ℹ️";
     }
   }
 }

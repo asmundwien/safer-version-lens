@@ -536,10 +536,10 @@ export class PackageVersionCommands {
 
       if (comparison > 0) {
         // Upgrade
-        return isMajor ? "$(arrow-up) " : "$(arrow-small-up) ";
+        return isMajor ? "$(arrow-up) " : "$(chevron-up) ";
       } else {
         // Downgrade
-        return isMajor ? "$(arrow-down) " : "$(arrow-small-down) ";
+        return isMajor ? "$(arrow-down) " : "$(chevron-down) ";
       }
     } catch (error) {
       return "";
