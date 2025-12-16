@@ -2,10 +2,8 @@ import * as vscode from "vscode";
 import { IPackageManagerService } from "./package-manager.interface";
 import {
   PackageManagerConfig,
-  PackageManagerInfo,
-  FEATURE_REQUIREMENTS
+  PackageManagerInfo
 } from "../../types/package-manager.types";
-import { meetsMinimumVersion } from "../../utils/version-validator";
 
 /**
  * pnpm package manager service
@@ -18,15 +16,6 @@ export class PnpmService implements IPackageManagerService {
   }
 
   async getConfig(workspaceUri: vscode.Uri): Promise<PackageManagerConfig> {
-    // Check if feature is supported
-    if (!this.isFeatureSupported()) {
-      return {
-        minimumReleaseAge: 0,
-        isSupported: false,
-        unsupportedReason: this.getUnsupportedReason()
-      };
-    }
-
     // Read pnpm-workspace.yaml for minimum-release-age
     const workspaceYamlUri = vscode.Uri.joinPath(
       workspaceUri,
@@ -39,43 +28,18 @@ export class PnpmService implements IPackageManagerService {
       const minimumReleaseAge = this.parseMinimumReleaseAge(text);
 
       return {
-        minimumReleaseAge: minimumReleaseAge ?? 0,
-        isSupported: true
+        minimumReleaseAge: minimumReleaseAge ?? 0
       };
     } catch (error) {
       // File doesn't exist - that's okay, just means no time quarantine configured
+      console.log(
+        "[SaferVersionLens] pnpm-workspace.yaml not found or unreadable:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
       return {
-        minimumReleaseAge: 0,
-        isSupported: true
+        minimumReleaseAge: 0
       };
     }
-  }
-
-  isFeatureSupported(): boolean {
-    const requirement = FEATURE_REQUIREMENTS.pnpm;
-    if (!requirement) return false;
-
-    // If version is unknown, assume not supported
-    if (this.info.version === "unknown") {
-      return false;
-    }
-
-    return meetsMinimumVersion(this.info.version, requirement.minVersion);
-  }
-
-  getUnsupportedReason(): string | undefined {
-    const requirement = FEATURE_REQUIREMENTS.pnpm;
-    if (!requirement) return undefined;
-
-    if (this.info.version === "unknown") {
-      return `pnpm version not specified in package.json. Requires pnpm ${requirement.minVersion}+ for ${requirement.feature}`;
-    }
-
-    if (!this.isFeatureSupported()) {
-      return `pnpm ${this.info.version} does not support ${requirement.feature}. Requires pnpm ${requirement.minVersion}+`;
-    }
-
-    return undefined;
   }
 
   /**

@@ -57,9 +57,9 @@ Automatically checks NPM security advisories for every version before you upgrad
 
 ---
 
-### 🔒 Time Quarantine Support (pnpm Only)
+### 🔒 Time Quarantine Support (pnpm, Yarn & npm)
 
-For teams using pnpm 10.21.0+ with `minimum-release-age` configuration, Safer Version Lens respects your time quarantine settings.
+For teams using pnpm, Yarn, or npm with time quarantine configuration, Safer Version Lens respects your settings.
 
 **What is Time Quarantine?**
 Time quarantine delays adoption of newly-published package versions, reducing risk from:
@@ -68,12 +68,24 @@ Time quarantine delays adoption of newly-published package versions, reducing ri
 - Critical bugs discovered shortly after release
 - Breaking changes not caught during initial testing
 
-**Setup** (pnpm users):
+**Setup:**
 
-Add to your `pnpm-workspace.yaml`:
+**For pnpm users** - Add to your `pnpm-workspace.yaml`:
 
 ```yaml
 minimumReleaseAge: 10080 # 7 days in minutes
+```
+
+**For Yarn users** - Add to your `.yarnrc.yml`:
+
+```yaml
+npmMinimalAgeGate: "7d"  # 7 days (supports: d=days, h=hours, m=minutes, s=seconds)
+```
+
+**For npm users** - Add to your `.npmrc`:
+
+```ini
+before=2024-12-09  # Only install packages published before this date (YYYY-MM-DD)
 ```
 
 The extension will:
@@ -82,11 +94,6 @@ The extension will:
 - Show visual indicators for versions still in quarantine
 - Display time-since-release for recent versions
 - Automatically filter quick-update buttons to exclude quarantined versions
-
-**Status for other package managers:**
-
-- **npm**: Time quarantine not yet supported (detection only)
-- **yarn**: Time quarantine not yet supported (detection only)
 
 ---
 
@@ -156,9 +163,12 @@ Available via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 4. Shows vulnerability severity indicators inline with version numbers
 5. Filters quick-update buttons to exclude versions above your threshold
 
-### Time Quarantine (pnpm)
+### Time Quarantine (pnpm, Yarn & npm)
 
-1. Reads `minimumReleaseAge` from `pnpm-workspace.yaml`
+1. Reads configuration from package manager config files:
+   - pnpm: `minimumReleaseAge` from `pnpm-workspace.yaml` (in minutes)
+   - Yarn: `npmMinimalAgeGate` from `.yarnrc.yml` (duration string like "7d", "24h", etc.)
+   - npm: `before` from `.npmrc` (date string like "2024-12-09")
 2. Fetches package publish timestamps from NPM registry
 3. Calculates age of each version since publication
 4. Filters out versions younger than the configured threshold
@@ -170,7 +180,7 @@ Available via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 
 - **VS Code**: 1.107.0 or higher
 - **Package Manager**: npm, pnpm, or yarn
-  - For time quarantine: pnpm 10.21.0+
+  - Time quarantine: Works with all package managers when configured
 - **Internet connection**: Fetches data from NPM registry and security advisory APIs
 
 **Optional:**
@@ -195,9 +205,24 @@ The extension caches registry and audit data for 30 minutes. Run `Safer Version 
 
 Ensure you:
 
-1. Have pnpm 10.21.0 or higher installed
-2. Have `minimumReleaseAge` configured in `pnpm-workspace.yaml`
-3. Have a `packageManager` field in `package.json` specifying pnpm version
+1. Have `minimumReleaseAge` configured in `pnpm-workspace.yaml`
+2. Have a `packageManager` field in `package.json` specifying pnpm (e.g., `"packageManager": "pnpm@10.25.0"`)
+
+### I'm using Yarn but time quarantine isn't working
+
+Ensure you:
+
+1. Have `npmMinimalAgeGate` configured in `.yarnrc.yml`
+2. Have a `packageManager` field in `package.json` specifying Yarn (e.g., `"packageManager": "yarn@4.0.0"`)
+3. The value uses duration string format (e.g., `"7d"` for 7 days, `"24h"` for 24 hours)
+
+### I'm using npm but time quarantine isn't working
+
+Ensure you:
+
+1. Have `before` configured in `.npmrc` in your project root
+2. Have a `packageManager` field in `package.json` specifying npm (e.g., `"packageManager": "npm@10.0.0"`)
+3. The value uses a date format (e.g., `2024-12-09` for YYYY-MM-DD)
 
 ### Does this work with private registries?
 
@@ -214,11 +239,11 @@ No. The extension:
 
 ### How is this different from Version Lens?
 
-| Feature                         | Safer Version Lens | Version Lens |
-| ------------------------------- | ------------------ | ------------ |
-| Security vulnerability auditing | ✅ Built-in        | ❌ No        |
-| Time quarantine (pnpm)          | ✅ Yes             | ❌ No        |
-| Inline version updates          | ✅ Yes             | ✅ Yes       |
+| Feature                                 | Safer Version Lens | Version Lens |
+| --------------------------------------- | ------------------ | ------------ |
+| Security vulnerability auditing         | ✅ Built-in        | ❌ No        |
+| Time quarantine (pnpm, Yarn & npm)      | ✅ Yes             | ❌ No        |
+| Inline version updates                  | ✅ Yes             | ✅ Yes       |
 
 Safer Version Lens focuses on **secure dependency management** with optional time quarantine for risk-averse teams.
 
@@ -234,7 +259,6 @@ Use both together! Dependabot/Renovate for automation, Safer Version Lens for in
 
 ## Known Issues
 
-- npm and yarn time quarantine support not yet implemented (package manager detection only)
 - No keyboard shortcuts for common actions
 - Large `package.json` files (100+ dependencies) may show slight delay on first load
 
@@ -244,8 +268,6 @@ Use both together! Dependabot/Renovate for automation, Safer Version Lens for in
 
 ### Upcoming Features
 
-- [ ] Yarn time quarantine support via `--install.update-stable-delay`
-- [ ] npm time quarantine via custom configuration
 - [ ] Workspace-wide package updates (update all package.json files at once)
 - [ ] Batch vulnerability remediation (fix all vulnerable packages)
 - [ ] Keyboard shortcuts for version update actions

@@ -72,25 +72,10 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         return [];
       }
 
-      // Check if package manager service is available and supports the feature
+      // Check if package manager service is available
       if (!this.packageManagerService) {
         console.log("[SaferVersionLens] No package manager detected");
         return [];
-      }
-
-      if (!this.packageManagerService.isFeatureSupported()) {
-        const reason = this.packageManagerService.getUnsupportedReason();
-        console.log("[SaferVersionLens] Feature not supported:", reason);
-
-        // Show warning at top of file
-        const topRange = new vscode.Range(0, 0, 0, 0);
-        return [
-          new vscode.CodeLens(topRange, {
-            title: `$(warning) ${reason}`,
-            command: "",
-            tooltip: reason
-          })
-        ];
       }
 
       const pmConfig = await this.packageManagerService.getConfig(
