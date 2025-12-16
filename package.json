@@ -1,9 +1,21 @@
 {
   "name": "safer-version-lens",
   "displayName": "Safer Version Lens",
-  "description": "Shows safe package versions respecting pnpm's minimum release age (time quarantine) configuration",
-  "version": "0.0.2",
+  "description": "Inline package version updates with vulnerability checking for safer dependencies",
+  "version": "0.0.4",
   "publisher": "asmundwien",
+  "keywords": [
+    "npm",
+    "dependencies",
+    "security",
+    "vulnerabilities",
+    "audit",
+    "package.json",
+    "version",
+    "updates",
+    "pnpm",
+    "yarn"
+  ],
   "icon": "icon.png",
   "repository": {
     "type": "git",
@@ -13,7 +25,8 @@
     "vscode": "^1.107.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Linters"
   ],
   "activationEvents": [
     "onLanguage:json"

@@ -1,73 +1,76 @@
 # Safer Version Lens
 
-A VS Code extension that shows safe package versions respecting your package manager's time quarantine configuration, with built-in security vulnerability auditing.
+**Inline package version updates with vulnerability checking for safer dependencies**
+
+Stop manually checking NPM for updates. Safer Version Lens adds CodeLens directly in your `package.json` that show available versions with security vulnerabilities, and let you upgrade with a single click. Built-in security auditing helps you avoid vulnerable packages, and optional time quarantine support lets you wait for packages to mature before adopting them.
+
+---
+
+## Quick Start
+
+1. **Install** the extension from the VS Code Marketplace
+2. **Open** any `package.json` file
+3. **Enable** it by clicking "Safer Version Lens" in the VSCode footer or via Command Palette: `Safer Version Lens: Toggle Enabled` (or in Settings: `saferVersionLens.enabled: true`).
+4. **See** CodeLens buttons appear above each dependency showing available versions with vulnerability indicators
+5. **Click** a version to update instantly or browse all versions with security details.
+
+That's it! No configuration needed to get started.
+
+---
 
 ## Features
 
-### 🔒 Time Quarantine Support
+### 📦 Inline Version Updates (All Package Managers)
 
-- **Respects pnpm's `minimum-release-age`**: Only suggests versions that have aged beyond your configured quarantine period
-- **Visual indicators**: Clear badges showing which versions are safe vs. in quarantine
-- **Multi-package manager**: Support for pnpm (with npm/yarn detection coming)
+Get intelligent version suggestions directly in your `package.json` without leaving your editor.
 
-### 🛡️ Security Vulnerability Auditing
+**Quick Update Buttons:**
 
-- **Automatic vulnerability scanning**: Checks NPM security advisories for all package versions
-- **Visual vulnerability indicators**: Shows security status with color-coded emojis
-  - `⛔ Critical` - Critical severity vulnerabilities
-  - `🔴 High` - High severity vulnerabilities
-  - `🟠 Moderate` - Moderate severity vulnerabilities
-  - `🟡 Low` - Low severity vulnerabilities
-- **Accurate version matching**: Uses semver ranges to show only vulnerabilities that affect each specific version
-- **Smart filtering**: Won't suggest versions with vulnerabilities above your configured threshold (default: low severity)
-- **Clickable vulnerability links**: View detailed security advisories in your browser
-- **Cached results**: 30-minute cache for fast subsequent checks
+- `↑ Latest in current major` - Safe patch/minor updates (e.g., `2.5.0` → `2.8.3`)
+- `🚀 Latest major` - Major version upgrades (e.g., `2.5.0` → `3.1.0`)
+- `📋 all versions` - Browse all available versions with detailed security analysis.
 
-### 📦 Version Update CodeLens
+**Works on** all dependencies and package managers.
 
-- **Inline version buttons**: Click to update directly from CodeLens
-  - `↑ Latest in current major` - Safest patch/minor update
-  - `🚀 Latest major` - Upgrade to newest major version
-  - `📋 all versions` - Browse complete version list
-- **Works on dependencies**: supports `dependencies`, `devDependencies`, `peerDependencies`
-- **Package manager updates**: Update `packageManager` field (e.g., `pnpm@10.21.0`)
+---
 
-### ⚙️ Toggle Controls
+### 🛡️ Security Vulnerability Auditing (All Package Managers)
 
-- Enable/disable the extension on-the-fly
-- Show/hide pre-release versions (alpha, beta, rc, etc.)
+Automatically checks NPM security advisories for every version before you upgrade.
 
-## Requirements
+**Visual Security Indicators:**
 
-- **VS Code 1.107.0 or higher**
-- **Package manager**: One of:
-  - pnpm 10.21.0+ (for `minimum-release-age` support)
-  - npm (time quarantine not yet supported)
-  - yarn (time quarantine not yet supported)
-- **Corepack** (recommended): For automatic package manager version detection
+- `⛔ Critical` - Critical severity vulnerabilities
+- `🔴 High` - High severity vulnerabilities
+- `🟠 Moderate` - Moderate severity vulnerabilities
+- `🟡 Low` - Low severity vulnerabilities
+- `✅` - No known vulnerabilities
 
-## Extension Settings
+**Smart Security Features:**
 
-This extension contributes the following settings:
+- **Accurate version matching**: Uses semver to show vulnerabilities affecting each specific version of a package.
+- **Quick-update protection**: Set maximum acceptable severity for suggested package updates (default: low)
+- **Clickable vulnerability links**: Click to view detailed NPM security advisories
+- **Performance optimized**: Results cached for 30 minutes
 
-- `saferVersionLens.enabled`: Enable/disable Safer Version Lens (default: `false`)
-- `saferVersionLens.showPrerelease`: Show pre-release versions like alpha, beta, rc (default: `false`)
-- `saferVersionLens.registry`: NPM registry URL to fetch package information from (default: `"https://registry.npmjs.org"`)
-- `saferVersionLens.auditEnabled`: Enable security vulnerability auditing (default: `true`)
-- `saferVersionLens.auditMaxSeverity`: Maximum allowed vulnerability severity for suggested versions (default: `"low"`)
-  - `"critical"` - Allow only versions with critical vulnerabilities or lower
-  - `"high"` - Allow up to and including high severity
-  - `"moderate"` - Allow up to and including moderate severity
-  - `"low"` - Allow up to and including low severity (**recommended**)
-  - `"info"` - Show all versions regardless of vulnerabilities
+**Note**: The "all versions" view shows complete version history including vulnerable packages, so you can make informed decisions on what to upgrade. The quick-update buttons (`↑` and `🚀`) automatically filter out versions exceeding your configured severity threshold.
 
-## How It Works
+---
 
-### Time Quarantine
+### 🔒 Time Quarantine Support (pnpm Only)
 
-**Note**: Currently only supported for pnpm 10.21.0+. Yarn and npm quarantine support is on the roadmap.
+For teams using pnpm 10.21.0+ with `minimum-release-age` configuration, Safer Version Lens respects your time quarantine settings.
 
-When you set `minimumReleaseAge` in your `pnpm-workspace.yaml` file:
+**What is Time Quarantine?**
+Time quarantine delays adoption of newly-published package versions, reducing risk from:
+
+- Malicious packages that get quickly detected and removed
+- Critical bugs discovered shortly after release
+- Breaking changes not caught during initial testing
+
+**Setup** (pnpm users):
+
+Add to your `pnpm-workspace.yaml`:
 
 ```yaml
 minimumReleaseAge: 10080 # 7 days in minutes
@@ -75,35 +78,216 @@ minimumReleaseAge: 10080 # 7 days in minutes
 
 The extension will:
 
-1. Fetch package metadata from the NPM registry
-2. Calculate the age of each version since publication
-3. Only suggest versions older than your configured threshold
-4. Show time-since-release info for versions in quarantine
+- Only suggest versions older than your configured threshold
+- Show visual indicators for versions still in quarantine
+- Display time-since-release for recent versions
+- Automatically filter quick-update buttons to exclude quarantined versions
 
-### Security Auditing
+**Status for other package managers:**
 
-The extension:
-
-1. Queries the NPM security advisory API for all displayed versions
-2. Uses semver range matching to show only vulnerabilities affecting each specific version
-3. Filters versions with vulnerabilities above your `auditMaxSeverity` setting
-4. Shows vulnerability counts and severities in version descriptions
-5. Provides clickable links to detailed security advisories
-
-**Note**: The version list shows ALL versions (including vulnerable ones) so you can make informed decisions, but the quick-update buttons only suggest secure versions.
-
-## Known Issues
-
-- Yarn and npm time quarantine support not yet implemented (detection only)
-- No keyboard shortcuts for common actions
-
-## Roadmap
-
-- [ ] Yarn time quarantine support (via `--install.update-stable-delay`)
-- [ ] npm time quarantine support (via custom config)
-- [ ] Workspace-wide package updates
-- [ ] Batch vulnerability remediation
+- **npm**: Time quarantine not yet supported (detection only)
+- **yarn**: Time quarantine not yet supported (detection only)
 
 ---
 
-**Enjoy safer dependency management!**
+### Additional Features
+
+- **Toggle controls**: Enable/disable extension on-the-fly via Command Palette
+- **Pre-release filtering**: Show/hide alpha, beta, rc, canary, and dev versions
+- **Custom registries**: Configure alternative NPM registries
+- **Multi-workspace support**: Automatically detects package manager per workspace folder
+- **Refresh on demand**: Force refresh cached data when needed
+
+---
+
+## Configuration
+
+All settings are optional. The extension works with sensible defaults out of the box.
+
+### Extension Settings
+
+| Setting                             | Default                      | Description                                                   |
+| ----------------------------------- | ---------------------------- | ------------------------------------------------------------- |
+| `saferVersionLens.enabled`          | `false`                      | Enable/disable Safer Version Lens                             |
+| `saferVersionLens.showPrerelease`   | `false`                      | Show pre-release versions (alpha, beta, rc, canary, dev)      |
+| `saferVersionLens.registry`         | `https://registry.npmjs.org` | NPM registry URL to fetch package information from            |
+| `saferVersionLens.auditEnabled`     | `true`                       | Enable security vulnerability auditing for package versions   |
+| `saferVersionLens.auditMaxSeverity` | `low`                        | Maximum allowed vulnerability severity for suggested versions |
+
+### Security Severity Levels
+
+Configure `saferVersionLens.auditMaxSeverity` to control which versions appear in quick-update buttons:
+
+| Value      | Behavior                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| `critical` | Only exclude versions with critical vulnerabilities                                      |
+| `high`     | Exclude versions with high or critical vulnerabilities                                   |
+| `moderate` | Exclude versions with moderate, high, or critical vulnerabilities                        |
+| `low`      | Exclude versions with low, moderate, high, or critical vulnerabilities (**recommended**) |
+| `info`     | Show all versions regardless of vulnerabilities                                          |
+
+### Commands
+
+Available via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
+
+- `Safer Version Lens: Toggle Enabled` - Turn extension on/off
+- `Safer Version Lens: Toggle Pre-release Versions` - Show/hide pre-release versions
+- `Safer Version Lens: Refresh` - Clear cache and reload version data
+- `Safer Version Lens: Show Configuration` - View current configuration
+
+---
+
+## How It Works
+
+### Version Updates
+
+1. When you open a `package.json` file, the extension detects your package manager
+2. For each dependency, it fetches available versions from the NPM registry
+3. Filters versions based on your pre-release and time quarantine settings
+4. Runs security audits on all available versions
+5. Displays CodeLens buttons above each dependency
+6. Clicking a version updates the `package.json` file in place
+
+### Security Auditing
+
+1. Queries the NPM security advisory API for each displayed package
+2. Uses semver range matching to determine which versions are affected
+3. Caches results for 30 minutes to optimize performance
+4. Shows vulnerability severity indicators inline with version numbers
+5. Filters quick-update buttons to exclude versions above your threshold
+
+### Time Quarantine (pnpm)
+
+1. Reads `minimumReleaseAge` from `pnpm-workspace.yaml`
+2. Fetches package publish timestamps from NPM registry
+3. Calculates age of each version since publication
+4. Filters out versions younger than the configured threshold
+5. Shows time-since-release for versions near the quarantine boundary
+
+---
+
+## Requirements
+
+- **VS Code**: 1.107.0 or higher
+- **Package Manager**: npm, pnpm, or yarn
+  - For time quarantine: pnpm 10.21.0+
+- **Internet connection**: Fetches data from NPM registry and security advisory APIs
+
+**Optional:**
+
+- **Corepack**: Enables automatic package manager version detection
+
+---
+
+## FAQ / Troubleshooting
+
+### The extension isn't showing any CodeLens buttons
+
+1. Make sure the extension is enabled: `Safer Version Lens: Toggle Enabled`
+2. Verify you have a `package.json` file open
+3. Check that `package.json` contains a `dependencies`, `devDependencies`, `peerDependencies`, or `packageManager` field
+
+### Version suggestions seem outdated
+
+The extension caches registry and audit data for 30 minutes. Run `Safer Version Lens: Refresh` to clear the cache and fetch fresh data.
+
+### I'm using pnpm but time quarantine isn't working
+
+Ensure you:
+
+1. Have pnpm 10.21.0 or higher installed
+2. Have `minimumReleaseAge` configured in `pnpm-workspace.yaml`
+3. Have a `packageManager` field in `package.json` specifying pnpm version
+
+### Does this work with private registries?
+
+Yes! Configure your registry URL in settings: `saferVersionLens.registry: "https://your-registry.com"`
+
+### Does this slow down my editor?
+
+No. The extension:
+
+- Only activates when viewing `package.json` files
+- Caches all network requests for 30 minutes
+- Fetches data asynchronously without blocking the editor
+- Uses CodeLens for non-intrusive UI and great DX
+
+### How is this different from Version Lens?
+
+| Feature                         | Safer Version Lens | Version Lens |
+| ------------------------------- | ------------------ | ------------ |
+| Security vulnerability auditing | ✅ Built-in        | ❌ No        |
+| Time quarantine (pnpm)          | ✅ Yes             | ❌ No        |
+| Inline version updates          | ✅ Yes             | ✅ Yes       |
+
+Safer Version Lens focuses on **secure dependency management** with optional time quarantine for risk-averse teams.
+
+### How is this different from Dependabot/Renovate?
+
+**Dependabot/Renovate**: Automated PR-based updates via GitHub/GitLab.
+
+**Safer Version Lens**: Manual on-demand updates with security visibility in your editor
+
+Use both together! Dependabot/Renovate for automation, Safer Version Lens for in editor updates with security context.
+
+---
+
+## Known Issues
+
+- npm and yarn time quarantine support not yet implemented (package manager detection only)
+- No keyboard shortcuts for common actions
+- Large `package.json` files (100+ dependencies) may show slight delay on first load
+
+---
+
+## Roadmap
+
+### Upcoming Features
+
+- [ ] Yarn time quarantine support via `--install.update-stable-delay`
+- [ ] npm time quarantine via custom configuration
+- [ ] Workspace-wide package updates (update all package.json files at once)
+- [ ] Batch vulnerability remediation (fix all vulnerable packages)
+- [ ] Keyboard shortcuts for version update actions
+- [ ] Export security audit report
+
+### Under Consideration
+
+- [ ] Integration with GitHub Security Advisories
+- [ ] Automatic updates on schedule
+- [ ] Version comparison diff view
+- [ ] Custom vulnerability filtering rules
+
+---
+
+## Privacy & Data
+
+This extension:
+
+- Fetches package metadata from NPM registry (or your configured registry)
+- Queries NPM security advisory API for vulnerability information
+- Caches responses locally for 30 minutes
+- **Does not collect or transmit any personal data or telemetry**
+- All network requests are read-only
+
+---
+
+## Contributing
+
+Found a bug? Have a feature request? Contributions are welcome!
+
+- **Repository**: [github.com/asmundwien/safer-version-lens](https://github.com/asmundwien/safer-version-lens)
+- **Issues**: Report bugs or request features via GitHub Issues
+- **Pull Requests**: See CONTRIBUTING.md for guidelines
+
+---
+
+## License
+
+See [LICENSE](LICENSE) file for details.
+
+---
+
+**Enjoy safer dependency management!** 🛡️
+
+If you find this extension helpful, please consider leaving a review on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=asmundwien.safer-version-lens).
