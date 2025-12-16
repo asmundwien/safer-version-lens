@@ -218,7 +218,8 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
             packageName,
             minimumReleaseAge,
             sectionName,
-            false
+            false,
+            currentVersionClean
           )
         );
       } catch (error) {

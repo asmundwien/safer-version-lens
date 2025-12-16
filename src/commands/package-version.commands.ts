@@ -78,7 +78,7 @@ export class PackageVersionCommands {
 
       // Use existing utility to find the dependency in the section
       const location = findDependencyInSection(text, packageName, sectionName);
-      
+
       if (!location) {
         vscode.window.showErrorMessage(
           `Package ${packageName} not found in ${sectionName}`
@@ -90,9 +90,11 @@ export class PackageVersionCommands {
       // location.position points to the start of "packageName": "version"
       // Find the opening quote of the version value
       const afterPosition = text.indexOf('": "', location.position);
-      
+
       if (afterPosition === -1) {
-        vscode.window.showErrorMessage(`Could not locate version for ${packageName}`);
+        vscode.window.showErrorMessage(
+          `Could not locate version for ${packageName}`
+        );
         return;
       }
 
@@ -175,7 +177,8 @@ export class PackageVersionCommands {
   private async showVersionInfo(
     packageName: string,
     minimumReleaseAge: number,
-    sectionName: string
+    sectionName: string,
+    currentVersion?: string
   ): Promise<void> {
     const metadata = await this.npmRegistry.fetchPackageMetadata(packageName);
     if (!metadata) {
@@ -225,13 +228,20 @@ export class PackageVersionCommands {
       const vulnDescription = this.getVulnerabilitySummary(v.vulnerabilities);
       const safetyStatus = this.getSafetyStatus(v, maxSeverity);
 
-      // Build description: comprehensive safety status + vulnerability summary
-      const description = vulnDescription
-        ? `${safetyStatus.icon} ${safetyStatus.text} | ${vulnDescription}`
-        : `${safetyStatus.icon} ${safetyStatus.text}`;
+      // Get version comparison indicator
+      const versionIndicator = this.getVersionIndicator(
+        v.version,
+        currentVersion
+      );
+
+      // Build description: safety status + vulnerability summary
+      let description = `${safetyStatus.icon} ${safetyStatus.text}`;
+      if (vulnDescription) {
+        description += ` | ${vulnDescription}`;
+      }
 
       return {
-        label: v.version,
+        label: `${versionIndicator}${v.version}`,
         description,
         detail: `Published: ${v.publishedAt.toLocaleDateString()} ${v.publishedAt.toLocaleTimeString()}${v.reason ? " - " + v.reason : ""}`,
         version: v.version,
@@ -500,6 +510,42 @@ export class PackageVersionCommands {
   /**
    * Get vulnerability summary for description field
    */
+  private getVersionIndicator(
+    targetVersion: string,
+    currentVersion?: string
+  ): string {
+    if (!currentVersion) {
+      return "";
+    }
+
+    const semver = require("semver");
+
+    try {
+      const current = semver.coerce(currentVersion);
+      const target = semver.coerce(targetVersion);
+
+      if (!current || !target) {
+        return "";
+      }
+
+      const comparison = semver.compare(target, current);
+
+      if (comparison === 0) return ""; // Current version
+
+      const isMajor = target.major !== current.major;
+
+      if (comparison > 0) {
+        // Upgrade
+        return isMajor ? "$(arrow-up) " : "$(arrow-small-up) ";
+      } else {
+        // Downgrade
+        return isMajor ? "$(arrow-down) " : "$(arrow-small-down) ";
+      }
+    } catch (error) {
+      return "";
+    }
+  }
+
   private getVulnerabilitySummary(vulnerabilities?: any[]): string {
     if (!vulnerabilities || vulnerabilities.length === 0) return "";
 

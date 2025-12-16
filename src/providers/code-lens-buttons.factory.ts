@@ -152,7 +152,8 @@ export class CodeLensButtonsFactory {
     packageName: string,
     minimumReleaseAge: number,
     sectionName: string,
-    isPackageManager: boolean = false
+    isPackageManager: boolean = false,
+    currentVersion?: string
   ): vscode.CodeLens {
     return new vscode.CodeLens(range, {
       title: "$(versions) all versions",
@@ -161,7 +162,7 @@ export class CodeLensButtonsFactory {
         : COMMANDS.SHOW_VERSION_INFO,
       arguments: isPackageManager
         ? [packageName, minimumReleaseAge]
-        : [packageName, minimumReleaseAge, sectionName],
+        : [packageName, minimumReleaseAge, sectionName, currentVersion],
       tooltip: `View all available ${isPackageManager ? packageName + " " : ""}versions`
     });
   }
