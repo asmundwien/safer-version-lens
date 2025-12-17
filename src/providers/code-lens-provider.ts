@@ -77,24 +77,34 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         return [];
       }
 
-      // Detect package manager relative to package.json directory
+      // Find workspace root (for monorepos, this searches upward for lock files)
       const packageJsonDir = path.dirname(document.uri.fsPath);
       const packageJsonDirUri = vscode.Uri.file(packageJsonDir);
       
+      const detector = this.packageManagerFactory.getDetector();
+      const workspaceRoot = await detector.findWorkspaceRoot(packageJsonDirUri, workspaceFolder);
+      
+      if (!workspaceRoot) {
+        console.log("[SaferVersionLens] Could not find workspace root");
+        return [];
+      }
+
+      const workspaceRootPath = workspaceRoot.fsPath;
+      
       // Check cache first
-      let localPackageManagerService = this.packageManagerCache.get(packageJsonDir);
+      let localPackageManagerService = this.packageManagerCache.get(workspaceRootPath);
       
       if (localPackageManagerService === undefined) {
         // Not in cache, detect now
-        console.log("[SaferVersionLens] Detecting package manager for:", packageJsonDir);
-        localPackageManagerService = await this.packageManagerFactory.create(packageJsonDirUri);
-        this.packageManagerCache.set(packageJsonDir, localPackageManagerService);
+        console.log("[SaferVersionLens] Detecting package manager at workspace root:", workspaceRootPath);
+        localPackageManagerService = await this.packageManagerFactory.create(workspaceRoot);
+        this.packageManagerCache.set(workspaceRootPath, localPackageManagerService);
         
         if (localPackageManagerService) {
           const info = localPackageManagerService.getInfo();
-          console.log(`[SaferVersionLens] Detected ${info.type}@${info.version} for ${packageJsonDir}`);
+          console.log(`[SaferVersionLens] Detected ${info.type}@${info.version} at ${workspaceRootPath}`);
         } else {
-          console.log("[SaferVersionLens] No package manager detected for", packageJsonDir);
+          console.log("[SaferVersionLens] No package manager detected at", workspaceRootPath);
         }
       }
 
@@ -105,7 +115,7 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
       }
 
       const pmConfig = await localPackageManagerService.getConfig(
-        packageJsonDirUri
+        workspaceRoot
       );
       const minimumReleaseAge = pmConfig.minimumReleaseAge;
 

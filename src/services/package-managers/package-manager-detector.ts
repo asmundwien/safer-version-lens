@@ -74,6 +74,44 @@ export class PackageManagerDetector {
   }
 
   /**
+   * Find workspace root by searching upward for lock files or pnpm-workspace.yaml
+   */
+  async findWorkspaceRoot(
+    startUri: vscode.Uri,
+    workspaceFolder: vscode.WorkspaceFolder
+  ): Promise<vscode.Uri | null> {
+    const lockFiles = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json", "pnpm-workspace.yaml"];
+    let currentDir = startUri.fsPath;
+    const workspaceRoot = workspaceFolder.uri.fsPath;
+
+    // Search upward until we reach the workspace root
+    while (currentDir.startsWith(workspaceRoot)) {
+      // Check if any lock file or workspace file exists in current directory
+      for (const lockFile of lockFiles) {
+        const lockFilePath = path.join(currentDir, lockFile);
+        try {
+          await fs.promises.access(lockFilePath);
+          console.log(`[SaferVersionLens] Found ${lockFile} at:`, currentDir);
+          return vscode.Uri.file(currentDir);
+        } catch {
+          // File doesn't exist, continue
+        }
+      }
+
+      // Move up one directory
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) {
+        // Reached filesystem root
+        break;
+      }
+      currentDir = parentDir;
+    }
+
+    // If nothing found, return the workspace folder root
+    return workspaceFolder.uri;
+  }
+
+  /**
    * Detect package manager using both methods (packageManager field first, then lock files)
    */
   async detect(workspaceUri: vscode.Uri): Promise<PackageManagerInfo> {
