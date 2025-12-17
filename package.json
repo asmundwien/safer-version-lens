@@ -3,7 +3,7 @@
   "displayName": "Safer Version Lens",
   "description": "Inline package version updates with vulnerability checking for safer dependencies",
   "version": "0.0.5",
-  "publisher": "Åsmund Røst Wien",
+  "publisher": "asmundwien",
   "keywords": [
     "npm",
     "dependencies",
