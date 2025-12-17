@@ -8,6 +8,7 @@ export const COMMANDS = {
   SHOW_VERSION_INFO: "safer-version-lens.showVersionInfo",
   SHOW_PACKAGE_MANAGER_VERSIONS:
     "safer-version-lens.showPackageManagerVersions",
+  SHOW_VULNERABILITIES: "safer-version-lens.showVulnerabilities",
   REFRESH: "safer-version-lens.refresh",
   SHOW_CONFIG: "safer-version-lens.showConfig",
   TOGGLE_ENABLED: "safer-version-lens.toggleEnabled",

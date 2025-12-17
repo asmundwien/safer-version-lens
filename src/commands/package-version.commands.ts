@@ -53,6 +53,10 @@ export class PackageVersionCommands {
         COMMANDS.SHOW_PACKAGE_MANAGER_VERSIONS,
         this.showPackageManagerVersions.bind(this)
       ),
+      vscode.commands.registerCommand(
+        COMMANDS.SHOW_VULNERABILITIES,
+        this.showVulnerabilitiesCommand.bind(this)
+      ),
       vscode.commands.registerCommand(COMMANDS.REFRESH, this.refresh.bind(this))
     );
   }
@@ -397,6 +401,17 @@ export class PackageVersionCommands {
     this.auditService.clearCache();
     this.codeLensProvider.refresh();
     vscode.window.showInformationMessage("Safer Version Lens refreshed");
+  }
+
+  /**
+   * Command handler to show vulnerabilities for a specific package version
+   */
+  private async showVulnerabilitiesCommand(
+    packageName: string,
+    version: string,
+    vulnerabilities: any[]
+  ): Promise<void> {
+    await this.showVulnerabilityDetails(vulnerabilities, packageName, version);
   }
 
   /**

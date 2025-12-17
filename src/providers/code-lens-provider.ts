@@ -208,10 +208,9 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
           codeLenses.push(
             new vscode.CodeLens(range, {
               title: `${vulnIcon} ${vulnCount} vulnerabilit${vulnCount === 1 ? "y" : "ies"}`,
-              command: "",
-              tooltip: currentVersionVulns
-                .map((v) => `${v.severity.toUpperCase()}: ${v.title}`)
-                .join("\n")
+              command: COMMANDS.SHOW_VULNERABILITIES,
+              arguments: [packageName, currentVersionClean, currentVersionVulns],
+              tooltip: `Click to view vulnerability details for ${packageName}@${currentVersionClean}`
             })
           );
         }

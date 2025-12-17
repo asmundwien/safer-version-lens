@@ -15,6 +15,7 @@ By marking vulnerable versions **directly in your editor — before you install 
 
 - **Inline version suggestions** (patch/minor/major + “all versions”)
 - **Security vulnerability indicators** per version (using npm advisory data)
+- **Vulnerability drill-down** for your installed version (click to list, open advisories)
 - **Clickable vulnerability lists** — inspect all known vulnerabilities for a version and open each advisory (CVE) directly
 - **Quick-update filtering** by max allowed vulnerability severity
 - **Time quarantine support** (respects your package manager’s age-gate config)
