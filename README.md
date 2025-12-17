@@ -20,6 +20,18 @@ By marking vulnerable versions **directly in your editor — before you install 
 - **Time quarantine support** (respects your package manager’s age-gate config)
 - **Caching + async fetching** to keep the editor responsive
 
+**Inline CodeLens actions:**
+
+![Inline CodeLens actions](https://raw.githubusercontent.com/asmundwien/safer-version-lens/main/images/package-json-example-03.png)
+
+**Browse all versions with vulnerability context:**
+
+![All versions view](https://raw.githubusercontent.com/asmundwien/safer-version-lens/main/images/all-versions-vulnerable-example-01.png)
+
+**Read up on vulnerabilities for a specific version:**
+
+![List of vulnerabilities](https://raw.githubusercontent.com/asmundwien/safer-version-lens/main/images/vulnerability-list-example-01.png)
+
 ---
 
 ## Quick Start
@@ -29,27 +41,7 @@ By marking vulnerable versions **directly in your editor — before you install 
 3. Look above each dependency for CodeLens update actions
 4. Click a version to update instantly — or browse `all versions` for details
 
-No configuration required to get started — the extension is **enabled by default**.
-
----
-
-## Screenshots
-
-### Inline CodeLens actions
-
-![Inline CodeLens actions](images/package-json-example-03.png)
-
-### Browse all versions with vulnerability context
-
-![All versions view](images/all-versions-vulnerable-example-01.png)
-
-### Read up on vulnerabilities for a specific version
-
-![List of vulnerabilities](images/vulnerability-list-example-01.png)
-
-### Time quarantine indicators
-
-![Time quarantine](images/all-versions-quarantine-example-02.png)
+No configuration required to get started.
 
 ---
 
@@ -63,8 +55,6 @@ CodeLens actions appear above each dependency:
 - `🚀 Latest major` — major upgrades
 - `📋 all versions` — browse full history with security context
 
-Works with npm / pnpm / Yarn.
-
 ### 🛡️ Vulnerability Context (npm advisories)
 
 Versions show severity indicators:
@@ -73,11 +63,10 @@ Versions show severity indicators:
 - `🔴 High`
 - `🟠 Moderate`
 - `🟡 Low`
-- `✅` None known
 
 Clicking a version marked as vulnerable opens a detailed list of all known vulnerabilities for that version, with direct links to their advisory (CVE) pages.
 
-Quick-update buttons can automatically **exclude versions above your configured severity threshold**.
+Quick-update buttons will automatically **exclude versions above your configured severity threshold**.
 
 This makes it easier to understand _what_ you’re patching — and _why_ — instead of blindly upgrading everything anything.
 
@@ -103,6 +92,10 @@ npmMinimalAgeGate: "7d"
 before=2024-12-09
 ```
 
+#### Time quarantine indicators
+
+![Time quarantine](https://raw.githubusercontent.com/asmundwien/safer-version-lens/main/images/all-versions-quarantine-example-02.png)
+
 The extension will avoid suggesting versions still “too fresh”.
 
 ## Configuration (Optional)
@@ -126,16 +119,19 @@ The extension will avoid suggesting versions still “too fresh”.
 
 **No CodeLens showing?**
 
-- Check the extension is enabled (use `Toggle Enabled` command if needed)
+- Check the extension is enabled by
+  - clicking the `Safer Version Lens` button in the VSCode footer, or
+  - running the `Safer Version Lens: Toggle Enabled` command
 - Open package.json
 - Ensure the file contains dependencies, devDependencies, peerDependencies, or a packageManager field
 
 **Suggestions look outdated?**
 
-Caches network results for 30 minutes. Run Safer Version Lens: Refresh.
+Caches network results for 30 minutes. Run `Safer Version Lens: Refresh`.
 
 **Private registries?**
-Yes: configure saferVersionLens.registry.
+
+Yes: configure `saferVersionLens.registry`.
 
 ## Privacy
 
@@ -148,5 +144,9 @@ Yes: configure saferVersionLens.registry.
 
 Repo: https://github.com/asmundwien/safer-version-lens
 Issues + PRs welcome
+
+## Acknowledgements
+
+Inspired by the **Version Lens** extension, with an additional focus on security context and supply-chain risk awareness.
 
 **Enjoy calmer dependency updates. 🛡️**

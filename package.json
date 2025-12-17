@@ -2,13 +2,14 @@
   "name": "safer-version-lens",
   "displayName": "Safer Version Lens",
   "description": "Inline package version updates with vulnerability checking for safer dependencies",
-  "version": "0.0.4",
-  "publisher": "asmundwien",
+  "version": "0.0.5",
+  "publisher": "Åsmund Røst Wien",
   "keywords": [
     "npm",
     "dependencies",
     "security",
     "vulnerabilities",
+    "cve",
     "audit",
     "package.json",
     "version",
@@ -16,6 +17,7 @@
     "pnpm",
     "yarn"
   ],
+  "license": "MIT",
   "icon": "icon.png",
   "repository": {
     "type": "git",
