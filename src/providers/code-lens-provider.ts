@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { NpmRegistryService } from "../services/npm-registry-service";
 import { IPackageManagerService } from "../services/package-managers/package-manager.interface";
 import { VersionFilterService } from "../services/version-filter-service";
 import { AuditService } from "../services/audit-service";
 import { CodeLensButtonsFactory } from "./code-lens-buttons.factory";
+import { PackageManagerFactory } from "../services/package-managers/package-manager.factory";
 import {
   findDependencyInSection,
   findPackageManagerField,
@@ -20,12 +22,14 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   public readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
   private auditService: AuditService;
+  private packageManagerCache: Map<string, IPackageManagerService | null> = new Map();
 
   constructor(
     private npmRegistry: NpmRegistryService,
     private packageManagerService: IPackageManagerService | null,
     private versionFilter: VersionFilterService,
-    private buttonsFactory: CodeLensButtonsFactory
+    private buttonsFactory: CodeLensButtonsFactory,
+    private packageManagerFactory: PackageManagerFactory
   ) {
     this.auditService = new AuditService();
   }
@@ -73,14 +77,35 @@ export class SaferVersionCodeLensProvider implements vscode.CodeLensProvider {
         return [];
       }
 
+      // Detect package manager relative to package.json directory
+      const packageJsonDir = path.dirname(document.uri.fsPath);
+      const packageJsonDirUri = vscode.Uri.file(packageJsonDir);
+      
+      // Check cache first
+      let localPackageManagerService = this.packageManagerCache.get(packageJsonDir);
+      
+      if (localPackageManagerService === undefined) {
+        // Not in cache, detect now
+        console.log("[SaferVersionLens] Detecting package manager for:", packageJsonDir);
+        localPackageManagerService = await this.packageManagerFactory.create(packageJsonDirUri);
+        this.packageManagerCache.set(packageJsonDir, localPackageManagerService);
+        
+        if (localPackageManagerService) {
+          const info = localPackageManagerService.getInfo();
+          console.log(`[SaferVersionLens] Detected ${info.type}@${info.version} for ${packageJsonDir}`);
+        } else {
+          console.log("[SaferVersionLens] No package manager detected for", packageJsonDir);
+        }
+      }
+
       // Check if package manager service is available
-      if (!this.packageManagerService) {
+      if (!localPackageManagerService) {
         console.log("[SaferVersionLens] No package manager detected");
         return [];
       }
 
-      const pmConfig = await this.packageManagerService.getConfig(
-        workspaceFolder.uri
+      const pmConfig = await localPackageManagerService.getConfig(
+        packageJsonDirUri
       );
       const minimumReleaseAge = pmConfig.minimumReleaseAge;
 

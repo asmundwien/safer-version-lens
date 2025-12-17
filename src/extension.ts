@@ -37,7 +37,8 @@ export async function activate(context: vscode.ExtensionContext) {
     npmRegistry,
     packageManagerService,
     versionFilter,
-    codeLensButtonsFactory
+    codeLensButtonsFactory,
+    packageManagerFactory
   );
 
   const codeLensDisposable = vscode.languages.registerCodeLensProvider(
