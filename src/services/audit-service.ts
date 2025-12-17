@@ -66,9 +66,14 @@ export class AuditService {
       }
 
       const auditData = (await response.json()) as AuditResponse;
-      
-      console.log(`[AuditService] Received audit data for ${packageName}, ${Object.keys(auditData).length} packages in response`);
-      console.log(`[AuditService] Vulnerabilities for ${packageName}:`, auditData[packageName] ? auditData[packageName].length : 0);
+
+      console.log(
+        `[AuditService] Received audit data for ${packageName}, ${Object.keys(auditData).length} packages in response`
+      );
+      console.log(
+        `[AuditService] Vulnerabilities for ${packageName}:`,
+        auditData[packageName] ? auditData[packageName].length : 0
+      );
 
       // Process audit results
       for (const version of uncachedVersions) {
@@ -76,8 +81,6 @@ export class AuditService {
           auditData[packageName] || [],
           version
         );
-
-        console.log(`[AuditService] Version ${version}: ${vulns.length} vulnerabilities after filtering`);
 
         // Cache the result
         const cacheKey = `${packageName}@${version}`;
